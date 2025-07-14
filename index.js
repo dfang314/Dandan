@@ -9,3 +9,11 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
+app.get('/mtg', (req, res) => {
+  res.send('Here are simple rules for mtg')
+})
+
+app.get('/dandan', (req, res) => {
+  res.send('Here are the rules for dandan')
+})
