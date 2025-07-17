@@ -59,7 +59,6 @@ app.get('/login', function(req, res){
 });
 
 app.post('/login', express.urlencoded({ extended: false }), function (req, res, next) {
-  console.log(req.body);
   if (!req.body) return res.sendStatus(400);
   authenticate(req.body.username, req.body.password, function(err, user){
     if (user) {
