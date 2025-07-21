@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <style>
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+        }
+        .cell {
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tic Tac Toe</h1>
+    <div class="game-board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    <p id="turn">Current turn: X</p>
+    <a href="/logout">Logout</a>
+
+    <script>
+        let currentPlayer = 'X';
+        const cells = document.querySelectorAll('.cell');
+        const turnDisplay = document.getElementById('turn');
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleClick);
+        });
+
+        function handleClick(e) {
+            const index = e.target.dataset.index;
+            if (!e.target.textContent) {
+                e.target.textContent = currentPlayer;
+                if (!checkWin()) {
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                    turnDisplay.textContent = `Current turn: ${currentPlayer}`;
+                }
+            }
+        }
+
+        function checkWin() {
+            const winConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            for (const condition of winConditions) {
+                const [a, b, c] = condition;
+                if (
+                    cells[a].textContent &&
+                    cells[a].textContent === cells[b].textContent &&
+                    cells[a].textContent === cells[c].textContent
+                ) {
+                    turnDisplay.textContent = `Player ${cells[a].textContent} wins! 🎉`;
+                    cells.forEach(cell => cell.removeEventListener('click', handleClick));
+                    return true;
+                }
+            }
+            return false;
+        }
+    </script>
+</body>
+</html>

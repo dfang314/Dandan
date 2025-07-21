@@ -15,7 +15,6 @@ app.use(session({
 
 var path = require('path')
 
-app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.static('public'))
@@ -51,11 +50,11 @@ app.get('/', function(req, res){
 });
 
 app.get('/restricted', restrict, function(req, res){
-  res.send('Wahoo! restricted area, click to <a href="/logout">logout</a>');
+  res.sendFile(path.join(__dirname, 'views', 'game.html'));
 });
 
 app.get('/login', function(req, res){
-  res.render('login');
+  res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
 app.post('/login', express.urlencoded({ extended: false }), function (req, res, next) {
