@@ -13,12 +13,11 @@
         }
         .cell {
             height: 100px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 36px;
+            width: 100px;
+            background-size: contain;
+            background-position: center;
+            background-image: url('defaultimg.png');
             cursor: pointer;
-            background-color: #f0f0f0;
         }
     </style>
 </head>
@@ -49,8 +48,16 @@
 
         function handleClick(e) {
             const index = e.target.dataset.index;
-            if (!e.target.textContent) {
-                e.target.textContent = currentPlayer;
+            if (e.target.style.backgroundImage === '' || 
+                e.target.style.backgroundImage.includes('defaultimg.png')) {
+                
+                // Set the appropriate sprite based on current player
+                if (currentPlayer === 'X') {
+                    e.target.style.backgroundImage = "url('xsquare.png')";
+                } else {
+                    e.target.style.backgroundImage = "url('osquare.png')";
+                }
+                
                 if (!checkWin()) {
                     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                     turnDisplay.textContent = `Current turn: ${currentPlayer}`;
@@ -66,12 +73,18 @@
             ];
             for (const condition of winConditions) {
                 const [a, b, c] = condition;
-                if (
-                    cells[a].textContent &&
-                    cells[a].textContent === cells[b].textContent &&
-                    cells[a].textContent === cells[c].textContent
-                ) {
-                    turnDisplay.textContent = `Player ${cells[a].textContent} wins! 🎉`;
+                const cellA = cells[a].style.backgroundImage;
+                const cellB = cells[b].style.backgroundImage;
+                const cellC = cells[c].style.backgroundImage;
+                
+                if (cellA && 
+                    !cellA.includes('defaultimg.png') && 
+                    cellA === cellB && 
+                    cellA === cellC) {
+                    
+                    // Determine winner based on sprite
+                    const winner = cellA.includes('xsquare.png') ? 'X' : 'O';
+                    turnDisplay.textContent = `Player ${winner} wins! 🎉`;
                     cells.forEach(cell => cell.removeEventListener('click', handleClick));
                     return true;
                 }
