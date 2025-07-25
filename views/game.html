@@ -21,12 +21,11 @@
             cursor: pointer;
         }
         
-        /* Step 2: Style the draggable circle */
-        .draggable-circle {
+        .draggable-rectangle {
             width: 40px;
-            height: 40px;
+            height: 80px;
             background-color: #ff6b6b;
-            border-radius: 50%;
+            border-radius: 8px;
             position: absolute;
             cursor: move;
             z-index: 1000;
@@ -37,12 +36,12 @@
             user-select: none;
         }
         
-        .draggable-circle:hover {
+        .draggable-rectangle:hover {
             background-color: #ff5252;
             transform: scale(1.1);
         }
         
-        .draggable-circle.dragging {
+        .draggable-rectangle.dragging {
             transform: scale(1.2);
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
@@ -61,11 +60,11 @@
         <div class="cell" data-index="7"></div>
         <div class="cell" data-index="8"></div>
         
-        <!-- Step 1: Add the draggable circle -->
-        <div class="draggable-circle" id="draggableCircle"></div>
+        <!-- Step 1: Add the draggable rect -->
+        <div class="draggable-rectangle" id="draggableRectangle"></div>
     </div>
     <p id="turn">Current turn: X</p>
-    <p><em>Drag the red circle around - it will affect the winning message!</em></p>
+    <p><em>Drag the red rect around - it will affect the winning message!</em></p>
     <a href="/logout">Logout</a>
 
     <script>
@@ -73,8 +72,7 @@
         const cells = document.querySelectorAll('.cell');
         const turnDisplay = document.getElementById('turn');
         
-        // Step 3: Drag functionality variables
-        const circle = document.getElementById('draggableCircle');
+        const rect = document.getElementById('draggableRectangle');
         let isDragging = false;
         let dragOffset = { x: 0, y: 0 };
 
@@ -102,17 +100,17 @@
         }
 
         // Step 3: Implement drag functionality
-        circle.addEventListener('mousedown', startDrag);
+        rect.addEventListener('mousedown', startDrag);
         document.addEventListener('mousemove', drag);
         document.addEventListener('mouseup', stopDrag);
 
         function startDrag(e) {
             isDragging = true;
-            circle.classList.add('dragging');
+            rect.classList.add('dragging');
             
-            const rect = circle.getBoundingClientRect();
-            dragOffset.x = e.clientX - rect.left;
-            dragOffset.y = e.clientY - rect.top;
+            const rectRect = rect.getBoundingClientRect();
+            dragOffset.x = e.clientX - rectRect.left;
+            dragOffset.y = e.clientY - rectRect.top;
             
             e.preventDefault();
         }
@@ -127,29 +125,46 @@
             const x = e.clientX - boardRect.left - dragOffset.x;
             const y = e.clientY - boardRect.top - dragOffset.y;
             
-            circle.style.left = x + 'px';
-            circle.style.top = y + 'px';
+            // Move the rectangle
+            rect.style.left = x + 'px';
+            rect.style.top = y + 'px';
+
+            // 🌟 Get screen width and position
+            const screenWidth = window.innerWidth;
+            const centerX = e.clientX;
+
+            // Normalize centerX to range [-1, 1]
+            const relativePosition = (centerX - screenWidth / 2) / (screenWidth / 2);
+            
+            // Clamp between -1 and 1
+            const clamped = Math.max(-1, Math.min(1, relativePosition));
+
+            // Calculate rotation angle (max 20 degrees)
+            const angle = clamped * 20;
+
+            // Apply rotation
+            rect.style.transform = `rotate(${angle}deg)`;
         }
 
         function stopDrag() {
             isDragging = false;
-            circle.classList.remove('dragging');
+            rect.classList.remove('dragging');
         }
 
         // Step 4: Add position detection function
-        function getCirclePosition() {
-            const circleRect = circle.getBoundingClientRect();
-            const circleCenterX = circleRect.left + circleRect.width / 2;
-            const circleCenterY = circleRect.top + circleRect.height / 2;
+        function getRectPosition() {
+            const rectRect = rect.getBoundingClientRect();
+            const rectCenterX = rectRect.left + rectRect.width / 2;
+            const rectCenterY = rectRect.top + rectRect.height / 2;
             
-            // Check if circle is over any cell
+            // Check if rect is over any cell
             for (let i = 0; i < cells.length; i++) {
                 const cellRect = cells[i].getBoundingClientRect();
                 
-                if (circleCenterX >= cellRect.left && 
-                    circleCenterX <= cellRect.right &&
-                    circleCenterY >= cellRect.top && 
-                    circleCenterY <= cellRect.bottom) {
+                if (rectCenterX >= cellRect.left && 
+                    rectCenterX <= cellRect.right &&
+                    rectCenterY >= cellRect.top && 
+                    rectCenterY <= cellRect.bottom) {
                     
                     // Determine what's in this cell
                     const cellBg = cells[i].style.backgroundImage;
@@ -163,7 +178,7 @@
                 }
             }
             
-            // Circle is not over the board
+            // rect is not over the board
             return 'outside';
         }
 
@@ -188,10 +203,10 @@
                     // Determine winner based on sprite
                     const winner = cellA.includes('xsquare.png') ? 'X' : 'O';
                     
-                    // Get circle position and choose appropriate emoji
-                    const circlePos = getCirclePosition();
+                    // Get rect position and choose appropriate emoji
+                    const rectPos = getrectPosition();
                     let emoji;
-                    switch(circlePos) {
+                    switch(rectPos) {
                         case 'X':
                             emoji = '😌';
                             break;
