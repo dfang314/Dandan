@@ -684,3 +684,348 @@ Context: I have working code for a modified tic tac toe game. There is a rectang
 </html>
 
 I want to modify this game so that there is a large button in the middle of the screen. Whenever the user presses this button, another rectangle with the same behaviour will appear. This way, the user can create a large amount of rectangles by pressing the button many times. Each rectangle should act independently. How would I change to code to add this feature? Let's think step by step. Explain each step clearly.
+---
+Context: I have working code for a tic tac toe game with rectangles on top. The code is:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .cell {
+            height: 100px;
+            width: 100px;
+            background-size: contain;
+            background-position: center;
+            background-image: url('defaultimg.png');
+            cursor: pointer;
+            border: 2px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        
+        .draggable-rectangle {
+            width: 40px;
+            height: 80px;
+            background-color: #ff6b6b;
+            border-radius: 8px;
+            position: absolute;
+            cursor: move;
+            z-index: 1000;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            user-select: none;
+        }
+        
+        .draggable-rectangle:hover {
+            background-color: #ff5252;
+            transform: scale(1.1);
+        }
+        
+        .draggable-rectangle.dragging {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        
+        /* New button styles */
+        .spawn-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            color: white;
+            padding: 20px 40px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            cursor: pointer;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .spawn-button:hover {
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        
+        .spawn-button:active {
+            transform: translateY(0px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .info-text {
+            font-style: italic;
+            color: #666;
+            margin: 10px 0;
+        }
+        
+        .rectangle-counter {
+            background-color: #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multi-Rectangle Tic Tac Toe</h1>
+    
+    <!-- New spawn button -->
+    <button class="spawn-button" id="spawnButton">🔴 Spawn New Rectangle</button>
+    
+    <div class="rectangle-counter" id="rectangleCounter">Rectangles: 1</div>
+    
+    <div class="game-board" id="gameBoard">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    
+    <p id="turn">Current turn: X</p>
+    <p class="info-text">Drag the red rectangles around - they will rotate based on screen position!</p>
+    <p class="info-text">Click the button above to spawn more rectangles!</p>
+
+    <script>
+        let currentPlayer = 'X';
+        const cells = document.querySelectorAll('.cell');
+        const turnDisplay = document.getElementById('turn');
+        const gameBoard = document.getElementById('gameBoard');
+        const spawnButton = document.getElementById('spawnButton');
+        const rectangleCounter = document.getElementById('rectangleCounter');
+        
+        // Array to keep track of all rectangles
+        let rectangles = [];
+        let rectangleIdCounter = 0;
+
+        // Game logic
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleClick);
+        });
+
+        function handleClick(e) {
+            const index = e.target.dataset.index;
+            if (e.target.style.backgroundImage === '' || 
+                e.target.style.backgroundImage.includes('defaultimg.png')) {
+                
+                // Set the appropriate sprite based on current player
+                if (currentPlayer === 'X') {
+                    e.target.style.backgroundImage = "url('xsquare.png')";
+                } else {
+                    e.target.style.backgroundImage = "url('osquare.png')";
+                }
+                
+                if (!checkWin()) {
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                    turnDisplay.textContent = `Current turn: ${currentPlayer}`;
+                }
+            }
+        }
+
+        // Rectangle factory function
+        function createRectangle() {
+            const rectId = `rect_${rectangleIdCounter++}`;
+            const rect = document.createElement('div');
+            rect.className = 'draggable-rectangle';
+            rect.id = rectId;
+            
+            // Random starting position within the game board area
+            const randomX = Math.random() * 200 + 50;
+            const randomY = Math.random() * 200 + 50;
+            rect.style.left = randomX + 'px';
+            rect.style.top = randomY + 'px';
+            
+            // Add to game board
+            gameBoard.appendChild(rect);
+            
+            // Create rectangle object with drag state
+            const rectangleObj = {
+                element: rect,
+                isDragging: false,
+                dragOffset: { x: 0, y: 0 }
+            };
+            
+            // Add event listeners for this specific rectangle
+            rect.addEventListener('mousedown', (e) => startDrag(e, rectangleObj));
+            
+            // Add to rectangles array
+            rectangles.push(rectangleObj);
+            
+            // Update counter
+            updateRectangleCounter();
+            
+            return rectangleObj;
+        }
+
+        // Drag functionality for individual rectangles
+        function startDrag(e, rectangleObj) {
+            rectangleObj.isDragging = true;
+            rectangleObj.element.classList.add('dragging');
+            
+            const rectRect = rectangleObj.element.getBoundingClientRect();
+            rectangleObj.dragOffset.x = e.clientX - rectRect.left;
+            rectangleObj.dragOffset.y = e.clientY - rectRect.top;
+            
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            rectangles.forEach(rectangleObj => {
+                if (!rectangleObj.isDragging) return;
+                
+                const boardRect = gameBoard.getBoundingClientRect();
+                
+                // Calculate position relative to the game board
+                const x = e.clientX - boardRect.left - rectangleObj.dragOffset.x;
+                const y = e.clientY - boardRect.top - rectangleObj.dragOffset.y;
+                
+                // Move the rectangle
+                rectangleObj.element.style.left = x + 'px';
+                rectangleObj.element.style.top = y + 'px';
+
+                // Get screen width and position for rotation
+                const screenWidth = window.innerWidth;
+                const centerX = e.clientX;
+
+                // Normalize centerX to range [-1, 1]
+                const relativePosition = (centerX - screenWidth / 2) / (screenWidth / 2);
+                
+                // Clamp between -1 and 1
+                const clamped = Math.max(-1, Math.min(1, relativePosition));
+
+                // Calculate rotation angle (max 20 degrees)
+                const angle = clamped * 20;
+
+                // Apply rotation
+                rectangleObj.element.style.transform = `rotate(${angle}deg)`;
+            });
+        }
+
+        function stopDrag() {
+            rectangles.forEach(rectangleObj => {
+                if (rectangleObj.isDragging) {
+                    rectangleObj.isDragging = false;
+                    rectangleObj.element.classList.remove('dragging');
+                }
+            });
+        }
+
+        // Global mouse event listeners
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDrag);
+
+        // Spawn button functionality
+        spawnButton.addEventListener('click', () => {
+            createRectangle();
+            
+            // Add a little visual feedback
+            spawnButton.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                spawnButton.style.transform = '';
+            }, 100);
+        });
+
+        // Update rectangle counter display
+        function updateRectangleCounter() {
+            rectangleCounter.textContent = `Rectangles: ${rectangles.length}`;
+        }
+
+        // Position detection function (updated for multiple rectangles)
+        function getRectPosition(specificRect = null) {
+            const rectsToCheck = specificRect ? [specificRect] : rectangles;
+            
+            for (const rectangleObj of rectsToCheck) {
+                const rectRect = rectangleObj.element.getBoundingClientRect();
+                const rectCenterX = rectRect.left + rectRect.width / 2;
+                const rectCenterY = rectRect.top + rectRect.height / 2;
+                
+                // Check if rect is over any cell
+                for (let i = 0; i < cells.length; i++) {
+                    const cellRect = cells[i].getBoundingClientRect();
+                    
+                    if (rectCenterX >= cellRect.left && 
+                        rectCenterX <= cellRect.right &&
+                        rectCenterY >= cellRect.top && 
+                        rectCenterY <= cellRect.bottom) {
+                        
+                        // Determine what's in this cell
+                        const cellBg = cells[i].style.backgroundImage;
+                        if (cellBg.includes('ff0000')) { // Red X
+                            return 'X';
+                        } else if (cellBg.includes('0000ff')) { // Blue O
+                            return 'O';
+                        } else {
+                            return 'blank';
+                        }
+                    }
+                }
+            }
+            
+            return 'outside';
+        }
+
+        // Win check function
+        function checkWin() {
+            const winConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            
+            for (const condition of winConditions) {
+                const [a, b, c] = condition;
+                const cellA = cells[a].style.backgroundImage;
+                const cellB = cells[b].style.backgroundImage;
+                const cellC = cells[c].style.backgroundImage;
+                
+                if (cellA && 
+                    !cellA.includes('defaultimg.png') && 
+                    cellA === cellB && 
+                    cellA === cellC) {
+                    
+                    // Determine winner based on sprite
+                    const winner = cellA.includes('ff0000') ? 'X' : 'O';
+                    
+                    let emoji = '😌';
+                    
+                    turnDisplay.textContent = `Player ${winner} wins! ${emoji}`;
+                    cells.forEach(cell => cell.removeEventListener('click', handleClick));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Create the initial rectangle
+        createRectangle();
+    </script>
+</body>
+</html>
+
+Remove the tic tac toe aspect of the game. Only retain the rectangle creation and behaviour. Let's think step by step. Explain each step.
