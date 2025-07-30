@@ -1029,3 +1029,249 @@ Context: I have working code for a tic tac toe game with rectangles on top. The 
 </html>
 
 Remove the tic tac toe aspect of the game. Only retain the rectangle creation and behaviour. Let's think step by step. Explain each step.
+---
+Context: I have a working game that involves rectangles. These rectangles are all the same color. The game code is provided as such:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rectangle Playground</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .playground-area {
+            width: 80vw;
+            height: 60vh;
+            background-color: #fff;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .draggable-rectangle {
+            width: 40px;
+            height: 80px;
+            background-color: #ff6b6b;
+            border-radius: 8px;
+            position: absolute;
+            cursor: move;
+            z-index: 1000;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            user-select: none;
+            transition: transform 0.1s ease;
+        }
+        
+        .draggable-rectangle:hover {
+            background-color: #ff5252;
+            transform: scale(1.1);
+        }
+        
+        .draggable-rectangle.dragging {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        
+        .spawn-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            color: white;
+            padding: 20px 40px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            cursor: pointer;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .spawn-button:hover {
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        
+        .spawn-button:active {
+            transform: translateY(0px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .info-text {
+            font-style: italic;
+            color: #666;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .rectangle-counter {
+            background-color: #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔴 Interactive Rectangle Playground</h1>
+    
+    <button class="spawn-button" id="spawnButton">🔴 Spawn New Rectangle</button>
+    
+    <div class="rectangle-counter" id="rectangleCounter">Rectangles: 1</div>
+    
+    <div class="playground-area" id="playgroundArea"></div>
+    
+    <p class="info-text">Drag the red rectangles around - they will rotate based on screen position!</p>
+    <p class="info-text">Click the button above to spawn more rectangles!</p>
+
+    <script>
+        const playgroundArea = document.getElementById('playgroundArea');
+        const spawnButton = document.getElementById('spawnButton');
+        const rectangleCounter = document.getElementById('rectangleCounter');
+        
+        // Array to keep track of all rectangles
+        let rectangles = [];
+        let rectangleIdCounter = 0;
+
+        // Rectangle factory function
+        function createRectangle() {
+            const rectId = `rect_${rectangleIdCounter++}`;
+            const rect = document.createElement('div');
+            rect.className = 'draggable-rectangle';
+            rect.id = rectId;
+            
+            // Random starting position within the playground area
+            const playgroundRect = playgroundArea.getBoundingClientRect();
+            const randomX = Math.random() * (playgroundRect.width - 60) + 10; // Account for rectangle width
+            const randomY = Math.random() * (playgroundRect.height - 100) + 10; // Account for rectangle height
+            rect.style.left = randomX + 'px';
+            rect.style.top = randomY + 'px';
+            
+            // Add to playground area
+            playgroundArea.appendChild(rect);
+            
+            // Create rectangle object with drag state
+            const rectangleObj = {
+                element: rect,
+                isDragging: false,
+                dragOffset: { x: 0, y: 0 }
+            };
+            
+            // Add event listeners for this specific rectangle
+            rect.addEventListener('mousedown', (e) => startDrag(e, rectangleObj));
+            
+            // Add to rectangles array
+            rectangles.push(rectangleObj);
+            
+            // Update counter
+            updateRectangleCounter();
+            
+            return rectangleObj;
+        }
+
+        // Drag functionality for individual rectangles
+        function startDrag(e, rectangleObj) {
+            rectangleObj.isDragging = true;
+            rectangleObj.element.classList.add('dragging');
+            
+            const rectRect = rectangleObj.element.getBoundingClientRect();
+            rectangleObj.dragOffset.x = e.clientX - rectRect.left;
+            rectangleObj.dragOffset.y = e.clientY - rectRect.top;
+            
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            rectangles.forEach(rectangleObj => {
+                if (!rectangleObj.isDragging) return;
+                
+                const playgroundRect = playgroundArea.getBoundingClientRect();
+                
+                // Calculate position relative to the playground area
+                let x = e.clientX - playgroundRect.left - rectangleObj.dragOffset.x;
+                let y = e.clientY - playgroundRect.top - rectangleObj.dragOffset.y;
+                
+                // Keep rectangle within playground bounds
+                const rectWidth = 40;
+                const rectHeight = 80;
+                x = Math.max(0, Math.min(playgroundRect.width - rectWidth, x));
+                y = Math.max(0, Math.min(playgroundRect.height - rectHeight, y));
+                
+                // Move the rectangle
+                rectangleObj.element.style.left = x + 'px';
+                rectangleObj.element.style.top = y + 'px';
+
+                // Get screen width and position for rotation
+                const screenWidth = window.innerWidth;
+                const centerX = e.clientX;
+
+                // Normalize centerX to range [-1, 1]
+                const relativePosition = (centerX - screenWidth / 2) / (screenWidth / 2);
+                
+                // Clamp between -1 and 1
+                const clamped = Math.max(-1, Math.min(1, relativePosition));
+
+                // Calculate rotation angle (max 20 degrees)
+                const angle = clamped * 20;
+
+                // Apply rotation while maintaining scale
+                const currentTransform = rectangleObj.element.classList.contains('dragging') ? 'scale(1.2)' : '';
+                rectangleObj.element.style.transform = `${currentTransform} rotate(${angle}deg)`;
+            });
+        }
+
+        function stopDrag() {
+            rectangles.forEach(rectangleObj => {
+                if (rectangleObj.isDragging) {
+                    rectangleObj.isDragging = false;
+                    rectangleObj.element.classList.remove('dragging');
+                }
+            });
+        }
+
+        // Global mouse event listeners
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDrag);
+
+        // Spawn button functionality
+        spawnButton.addEventListener('click', () => {
+            createRectangle();
+            
+            // Add a little visual feedback
+            spawnButton.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                spawnButton.style.transform = '';
+            }, 100);
+        });
+
+        // Update rectangle counter display
+        function updateRectangleCounter() {
+            rectangleCounter.textContent = `Rectangles: ${rectangles.length}`;
+        }
+
+        // Create the initial rectangle
+        createRectangle();
+    </script>
+</body>
+</html>
+
+I want to make some big changes to this. Please make these changes. Let's think step by step. Explain each step. The changes are:
+Change 1: Instead of creating rectangles, there will always be a fixed number of rectangles. This fixed number is 60.
+Change 2: Each of these rectangles should have a unique color.
+Change 3: At the start of the game, 7 rectangles at random are chosen to be near the bottom middle of the screen in a row. Similarly, 7 more rectangles are chosen at random to be near the top middle of the screen in a row. The rest of the rectangles should form a row across the middle of the screen.
+Change 4: Even before any dragging, each rectangle should already be rotated based on its position on the screen.

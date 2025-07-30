@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rectangle Playground</title>
+    <title>60 Colorful Rectangles Playground</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,149 +11,222 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            margin: 0;
         }
         
         .playground-area {
-            width: 80vw;
-            height: 60vh;
-            background-color: #fff;
-            border: 3px solid #ddd;
-            border-radius: 15px;
+            width: 90vw;
+            height: 75vh;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
             position: relative;
             margin: 20px 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
         }
         
         .draggable-rectangle {
-            width: 40px;
-            height: 80px;
-            background-color: #ff6b6b;
+            width: 35px;
+            height: 70px;
             border-radius: 8px;
             position: absolute;
             cursor: move;
             z-index: 1000;
-            border: 3px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
             user-select: none;
-            transition: transform 0.1s ease;
+            transform-origin: center center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
         
         .draggable-rectangle:hover {
-            background-color: #ff5252;
-            transform: scale(1.1);
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 1);
+            transition: all 0.1s ease;
         }
         
         .draggable-rectangle.dragging {
-            transform: scale(1.2);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
-        
-        .spawn-button {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            border: none;
-            color: white;
-            padding: 20px 40px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 18px;
-            font-weight: bold;
-            margin: 20px 0;
-            cursor: pointer;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .spawn-button:hover {
-            background: linear-gradient(45deg, #45a049, #4CAF50);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-        }
-        
-        .spawn-button:active {
-            transform: translateY(0px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            border-color: rgba(255, 255, 255, 1);
         }
         
         .info-text {
             font-style: italic;
-            color: #666;
+            color: rgba(255, 255, 255, 0.9);
             margin: 10px 0;
             text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 16px;
         }
         
-        .rectangle-counter {
-            background-color: #e0e0e0;
-            padding: 10px 20px;
-            border-radius: 20px;
+        .title {
+            color: white;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .rectangle-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 30px;
+            border-radius: 25px;
             margin: 10px 0;
             font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 <body>
-    <h1>🔴 Interactive Rectangle Playground</h1>
+    <h1 class="title">🌈 60 Colorful Rectangles Playground</h1>
     
-    <button class="spawn-button" id="spawnButton">🔴 Spawn New Rectangle</button>
-    
-    <div class="rectangle-counter" id="rectangleCounter">Rectangles: 1</div>
+    <div class="rectangle-info">60 Unique Colorful Rectangles</div>
     
     <div class="playground-area" id="playgroundArea"></div>
     
-    <p class="info-text">Drag the red rectangles around - they will rotate based on screen position!</p>
-    <p class="info-text">Click the button above to spawn more rectangles!</p>
+    <p class="info-text">Drag the colorful rectangles around - they rotate based on screen position!</p>
+    <p class="info-text">Each rectangle has its own unique color from across the spectrum!</p>
 
     <script>
         const playgroundArea = document.getElementById('playgroundArea');
-        const spawnButton = document.getElementById('spawnButton');
-        const rectangleCounter = document.getElementById('rectangleCounter');
         
         // Array to keep track of all rectangles
         let rectangles = [];
-        let rectangleIdCounter = 0;
+        const TOTAL_RECTANGLES = 60;
+        const TOP_ROW_COUNT = 7;
+        const BOTTOM_ROW_COUNT = 7;
+        
+        let isDragging = false;
+        let animationId = null;
+        let currentMouseEvent = null;
+
+        // Generate 60 unique colors using HSL color space
+        function generateUniqueColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const hue = (i * 360) / count;
+                const saturation = 70 + (i % 3) * 10;
+                const lightness = 50 + (i % 4) * 10;
+                colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+            }
+            return colors;
+        }
+
+        // Calculate rotation based on screen position
+        function calculateRotation(x) {
+            const screenWidth = window.innerWidth;
+            const relativePosition = (x - screenWidth / 2) / (screenWidth / 2);
+            const clamped = Math.max(-1, Math.min(1, relativePosition));
+            return clamped * 20;
+        }
 
         // Rectangle factory function
-        function createRectangle() {
-            const rectId = `rect_${rectangleIdCounter++}`;
+        function createRectangle(color, x, y) {
             const rect = document.createElement('div');
             rect.className = 'draggable-rectangle';
-            rect.id = rectId;
+            rect.style.backgroundColor = color;
+            rect.style.left = x + 'px';
+            rect.style.top = y + 'px';
             
-            // Random starting position within the playground area
+            // Calculate initial rotation based on absolute screen position
             const playgroundRect = playgroundArea.getBoundingClientRect();
-            const randomX = Math.random() * (playgroundRect.width - 60) + 10; // Account for rectangle width
-            const randomY = Math.random() * (playgroundRect.height - 100) + 10; // Account for rectangle height
-            rect.style.left = randomX + 'px';
-            rect.style.top = randomY + 'px';
+            const absoluteX = playgroundRect.left + x + 17.5;
+            const rotation = calculateRotation(absoluteX);
+            rect.style.transform = `rotate(${rotation}deg)`;
             
-            // Add to playground area
             playgroundArea.appendChild(rect);
             
-            // Create rectangle object with drag state
             const rectangleObj = {
                 element: rect,
                 isDragging: false,
                 dragOffset: { x: 0, y: 0 }
             };
             
-            // Add event listeners for this specific rectangle
             rect.addEventListener('mousedown', (e) => startDrag(e, rectangleObj));
-            
-            // Add to rectangles array
-            rectangles.push(rectangleObj);
-            
-            // Update counter
-            updateRectangleCounter();
             
             return rectangleObj;
         }
 
-        // Drag functionality for individual rectangles
+        // Initialize all 60 rectangles with strategic positioning
+        function initializeRectangles() {
+            const colors = generateUniqueColors(TOTAL_RECTANGLES);
+            const playgroundRect = playgroundArea.getBoundingClientRect();
+            const playgroundWidth = playgroundRect.width || playgroundArea.offsetWidth;
+            const playgroundHeight = playgroundRect.height || playgroundArea.offsetHeight;
+            
+            const indices = Array.from({length: TOTAL_RECTANGLES}, (_, i) => i);
+            
+            // Fisher-Yates shuffle
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            
+            const topRowIndices = indices.slice(0, TOP_ROW_COUNT);
+            const bottomRowIndices = indices.slice(TOP_ROW_COUNT, TOP_ROW_COUNT + BOTTOM_ROW_COUNT);
+            const middleRowIndices = indices.slice(TOP_ROW_COUNT + BOTTOM_ROW_COUNT);
+            
+            // Position rectangles in top row (centered)
+            const topRowY = 30;
+            const topRowSpacing = 80;
+            const topRowTotalWidth = (TOP_ROW_COUNT - 1) * topRowSpacing;
+            const topRowStartX = (playgroundWidth - topRowTotalWidth) / 2;
+            
+            topRowIndices.forEach((colorIndex, i) => {
+                const x = topRowStartX + i * topRowSpacing - 17.5;
+                const rectangle = createRectangle(colors[colorIndex], x, topRowY);
+                rectangles.push(rectangle);
+            });
+            
+            // Position rectangles in bottom row (centered)
+            const bottomRowY = playgroundHeight - 100;
+            const bottomRowSpacing = 80;
+            const bottomRowTotalWidth = (BOTTOM_ROW_COUNT - 1) * bottomRowSpacing;
+            const bottomRowStartX = (playgroundWidth - bottomRowTotalWidth) / 2;
+            
+            bottomRowIndices.forEach((colorIndex, i) => {
+                const x = bottomRowStartX + i * bottomRowSpacing - 17.5;
+                const rectangle = createRectangle(colors[colorIndex], x, bottomRowY);
+                rectangles.push(rectangle);
+            });
+            
+            // Position remaining rectangles in middle row
+            const middleRowY = playgroundHeight / 2 - 35;
+            const middleRowSpacing = Math.max(playgroundWidth / (middleRowIndices.length + 1), 45);
+            const middleRowStartX = (playgroundWidth - (middleRowIndices.length - 1) * middleRowSpacing) / 2;
+            
+            middleRowIndices.forEach((colorIndex, i) => {
+                const x = middleRowStartX + i * middleRowSpacing - 17.5;
+                const rectangle = createRectangle(colors[colorIndex], x, middleRowY);
+                rectangles.push(rectangle);
+            });
+        }
+
+        // Optimized drag functions
         function startDrag(e, rectangleObj) {
             rectangleObj.isDragging = true;
+            isDragging = true;
             rectangleObj.element.classList.add('dragging');
             
             const rectRect = rectangleObj.element.getBoundingClientRect();
@@ -163,76 +236,86 @@
             e.preventDefault();
         }
 
-        function drag(e) {
+        function updatePositions() {
+            if (!isDragging || !currentMouseEvent) return;
+            
+            const e = currentMouseEvent;
+            const playgroundRect = playgroundArea.getBoundingClientRect();
+            
             rectangles.forEach(rectangleObj => {
                 if (!rectangleObj.isDragging) return;
                 
-                const playgroundRect = playgroundArea.getBoundingClientRect();
-                
-                // Calculate position relative to the playground area
                 let x = e.clientX - playgroundRect.left - rectangleObj.dragOffset.x;
                 let y = e.clientY - playgroundRect.top - rectangleObj.dragOffset.y;
                 
-                // Keep rectangle within playground bounds
-                const rectWidth = 40;
-                const rectHeight = 80;
+                const rectWidth = 35;
+                const rectHeight = 70;
                 x = Math.max(0, Math.min(playgroundRect.width - rectWidth, x));
                 y = Math.max(0, Math.min(playgroundRect.height - rectHeight, y));
                 
-                // Move the rectangle
                 rectangleObj.element.style.left = x + 'px';
                 rectangleObj.element.style.top = y + 'px';
 
-                // Get screen width and position for rotation
-                const screenWidth = window.innerWidth;
-                const centerX = e.clientX;
-
-                // Normalize centerX to range [-1, 1]
-                const relativePosition = (centerX - screenWidth / 2) / (screenWidth / 2);
-                
-                // Clamp between -1 and 1
-                const clamped = Math.max(-1, Math.min(1, relativePosition));
-
-                // Calculate rotation angle (max 20 degrees)
-                const angle = clamped * 20;
-
-                // Apply rotation while maintaining scale
-                const currentTransform = rectangleObj.element.classList.contains('dragging') ? 'scale(1.2)' : '';
-                rectangleObj.element.style.transform = `${currentTransform} rotate(${angle}deg)`;
+                const rotation = calculateRotation(e.clientX);
+                rectangleObj.element.style.transform = `scale(1.1) rotate(${rotation}deg)`;
             });
         }
 
+        function drag(e) {
+            if (!isDragging) return;
+            currentMouseEvent = e;
+            
+            if (!animationId) {
+                animationId = requestAnimationFrame(() => {
+                    updatePositions();
+                    animationId = null;
+                });
+            }
+        }
+
         function stopDrag() {
+            isDragging = false;
+            currentMouseEvent = null;
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
             rectangles.forEach(rectangleObj => {
                 if (rectangleObj.isDragging) {
                     rectangleObj.isDragging = false;
                     rectangleObj.element.classList.remove('dragging');
+                    
+                    const currentTransform = rectangleObj.element.style.transform;
+                    const rotationMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+                    if (rotationMatch) {
+                        rectangleObj.element.style.transform = `rotate(${rotationMatch[1]})`;
+                    }
                 }
             });
         }
 
-        // Global mouse event listeners
-        document.addEventListener('mousemove', drag);
+        // Event listeners
+        document.addEventListener('mousemove', drag, { passive: false });
         document.addEventListener('mouseup', stopDrag);
 
-        // Spawn button functionality
-        spawnButton.addEventListener('click', () => {
-            createRectangle();
-            
-            // Add a little visual feedback
-            spawnButton.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                spawnButton.style.transform = '';
-            }, 100);
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            rectangles.forEach(rectangleObj => {
+                if (!rectangleObj.isDragging) {
+                    const rectRect = rectangleObj.element.getBoundingClientRect();
+                    const centerX = rectRect.left + rectRect.width / 2;
+                    const rotation = calculateRotation(centerX);
+                    rectangleObj.element.style.transform = `rotate(${rotation}deg)`;
+                }
+            });
         });
 
-        // Update rectangle counter display
-        function updateRectangleCounter() {
-            rectangleCounter.textContent = `Rectangles: ${rectangles.length}`;
-        }
-
-        // Create the initial rectangle
-        createRectangle();
+        // Initialize the game
+        window.addEventListener('load', () => {
+            setTimeout(initializeRectangles, 100);
+        });
     </script>
 </body>
 </html>
