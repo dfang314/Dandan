@@ -1275,3 +1275,342 @@ Change 1: Instead of creating rectangles, there will always be a fixed number of
 Change 2: Each of these rectangles should have a unique color.
 Change 3: At the start of the game, 7 rectangles at random are chosen to be near the bottom middle of the screen in a row. Similarly, 7 more rectangles are chosen at random to be near the top middle of the screen in a row. The rest of the rectangles should form a row across the middle of the screen.
 Change 4: Even before any dragging, each rectangle should already be rotated based on its position on the screen.
+---
+Context: I have a working game with rectangles. In the game, there is currently a top row, bottom row, and middle row of rectangles. I want to modify the deck to be more like a card game, with the rectangles representing different cards.
+
+The current working code is:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>60 Colorful Rectangles Playground</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .playground-area {
+            width: 90vw;
+            height: 75vh;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            position: relative;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        
+        .draggable-rectangle {
+            width: 35px;
+            height: 70px;
+            border-radius: 8px;
+            position: absolute;
+            cursor: move;
+            z-index: 1000;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            transform-origin: center center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        
+        .draggable-rectangle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 1);
+            transition: all 0.1s ease;
+        }
+        
+        .draggable-rectangle.dragging {
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            border-color: rgba(255, 255, 255, 1);
+        }
+        
+        .info-text {
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 10px 0;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 16px;
+        }
+        
+        .title {
+            color: white;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .rectangle-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 30px;
+            border-radius: 25px;
+            margin: 10px 0;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">🌈 60 Colorful Rectangles Playground</h1>
+    
+    <div class="rectangle-info">60 Unique Colorful Rectangles</div>
+    
+    <div class="playground-area" id="playgroundArea"></div>
+    
+    <p class="info-text">Drag the colorful rectangles around - they rotate based on screen position!</p>
+    <p class="info-text">Each rectangle has its own unique color from across the spectrum!</p>
+
+    <script>
+        const playgroundArea = document.getElementById('playgroundArea');
+        
+        // Array to keep track of all rectangles
+        let rectangles = [];
+        const TOTAL_RECTANGLES = 60;
+        const TOP_ROW_COUNT = 7;
+        const BOTTOM_ROW_COUNT = 7;
+        
+        let isDragging = false;
+        let animationId = null;
+        let currentMouseEvent = null;
+
+        // Generate 60 unique colors using HSL color space
+        function generateUniqueColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const hue = (i * 360) / count;
+                const saturation = 70 + (i % 3) * 10;
+                const lightness = 50 + (i % 4) * 10;
+                colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+            }
+            return colors;
+        }
+
+        // Calculate rotation based on screen position
+        function calculateRotation(x) {
+            const screenWidth = window.innerWidth;
+            const relativePosition = (x - screenWidth / 2) / (screenWidth / 2);
+            const clamped = Math.max(-1, Math.min(1, relativePosition));
+            return clamped * 20;
+        }
+
+        // Rectangle factory function
+        function createRectangle(color, x, y) {
+            const rect = document.createElement('div');
+            rect.className = 'draggable-rectangle';
+            rect.style.backgroundColor = color;
+            rect.style.left = x + 'px';
+            rect.style.top = y + 'px';
+            
+            // Calculate initial rotation based on absolute screen position
+            const playgroundRect = playgroundArea.getBoundingClientRect();
+            const absoluteX = playgroundRect.left + x + 17.5;
+            const rotation = calculateRotation(absoluteX);
+            rect.style.transform = `rotate(${rotation}deg)`;
+            
+            playgroundArea.appendChild(rect);
+            
+            const rectangleObj = {
+                element: rect,
+                isDragging: false,
+                dragOffset: { x: 0, y: 0 }
+            };
+            
+            rect.addEventListener('mousedown', (e) => startDrag(e, rectangleObj));
+            
+            return rectangleObj;
+        }
+
+        // Initialize all 60 rectangles with strategic positioning
+        function initializeRectangles() {
+            const colors = generateUniqueColors(TOTAL_RECTANGLES);
+            const playgroundRect = playgroundArea.getBoundingClientRect();
+            const playgroundWidth = playgroundRect.width || playgroundArea.offsetWidth;
+            const playgroundHeight = playgroundRect.height || playgroundArea.offsetHeight;
+            
+            const indices = Array.from({length: TOTAL_RECTANGLES}, (_, i) => i);
+            
+            // Fisher-Yates shuffle
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            
+            const topRowIndices = indices.slice(0, TOP_ROW_COUNT);
+            const bottomRowIndices = indices.slice(TOP_ROW_COUNT, TOP_ROW_COUNT + BOTTOM_ROW_COUNT);
+            const middleRowIndices = indices.slice(TOP_ROW_COUNT + BOTTOM_ROW_COUNT);
+            
+            // Position rectangles in top row (centered)
+            const topRowY = 30;
+            const topRowSpacing = 80;
+            const topRowTotalWidth = (TOP_ROW_COUNT - 1) * topRowSpacing;
+            const topRowStartX = (playgroundWidth - topRowTotalWidth) / 2;
+            
+            topRowIndices.forEach((colorIndex, i) => {
+                const x = topRowStartX + i * topRowSpacing - 17.5;
+                const rectangle = createRectangle(colors[colorIndex], x, topRowY);
+                rectangles.push(rectangle);
+            });
+            
+            // Position rectangles in bottom row (centered)
+            const bottomRowY = playgroundHeight - 100;
+            const bottomRowSpacing = 80;
+            const bottomRowTotalWidth = (BOTTOM_ROW_COUNT - 1) * bottomRowSpacing;
+            const bottomRowStartX = (playgroundWidth - bottomRowTotalWidth) / 2;
+            
+            bottomRowIndices.forEach((colorIndex, i) => {
+                const x = bottomRowStartX + i * bottomRowSpacing - 17.5;
+                const rectangle = createRectangle(colors[colorIndex], x, bottomRowY);
+                rectangles.push(rectangle);
+            });
+            
+            // Position remaining rectangles in middle row
+            const middleRowY = playgroundHeight / 2 - 35;
+            const middleRowSpacing = Math.max(playgroundWidth / (middleRowIndices.length + 1), 45);
+            const middleRowStartX = (playgroundWidth - (middleRowIndices.length - 1) * middleRowSpacing) / 2;
+            
+            middleRowIndices.forEach((colorIndex, i) => {
+                const x = middleRowStartX + i * middleRowSpacing - 17.5;
+                const rectangle = createRectangle(colors[colorIndex], x, middleRowY);
+                rectangles.push(rectangle);
+            });
+        }
+
+        // Optimized drag functions
+        function startDrag(e, rectangleObj) {
+            rectangleObj.isDragging = true;
+            isDragging = true;
+            rectangleObj.element.classList.add('dragging');
+            
+            const rectRect = rectangleObj.element.getBoundingClientRect();
+            rectangleObj.dragOffset.x = e.clientX - rectRect.left;
+            rectangleObj.dragOffset.y = e.clientY - rectRect.top;
+            
+            e.preventDefault();
+        }
+
+        function updatePositions() {
+            if (!isDragging || !currentMouseEvent) return;
+            
+            const e = currentMouseEvent;
+            const playgroundRect = playgroundArea.getBoundingClientRect();
+            
+            rectangles.forEach(rectangleObj => {
+                if (!rectangleObj.isDragging) return;
+                
+                let x = e.clientX - playgroundRect.left - rectangleObj.dragOffset.x;
+                let y = e.clientY - playgroundRect.top - rectangleObj.dragOffset.y;
+                
+                const rectWidth = 35;
+                const rectHeight = 70;
+                x = Math.max(0, Math.min(playgroundRect.width - rectWidth, x));
+                y = Math.max(0, Math.min(playgroundRect.height - rectHeight, y));
+                
+                rectangleObj.element.style.left = x + 'px';
+                rectangleObj.element.style.top = y + 'px';
+
+                const rotation = calculateRotation(e.clientX);
+                rectangleObj.element.style.transform = `scale(1.1) rotate(${rotation}deg)`;
+            });
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            currentMouseEvent = e;
+            
+            if (!animationId) {
+                animationId = requestAnimationFrame(() => {
+                    updatePositions();
+                    animationId = null;
+                });
+            }
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            currentMouseEvent = null;
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            rectangles.forEach(rectangleObj => {
+                if (rectangleObj.isDragging) {
+                    rectangleObj.isDragging = false;
+                    rectangleObj.element.classList.remove('dragging');
+                    
+                    const currentTransform = rectangleObj.element.style.transform;
+                    const rotationMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+                    if (rotationMatch) {
+                        rectangleObj.element.style.transform = `rotate(${rotationMatch[1]})`;
+                    }
+                }
+            });
+        }
+
+        // Event listeners
+        document.addEventListener('mousemove', drag, { passive: false });
+        document.addEventListener('mouseup', stopDrag);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            rectangles.forEach(rectangleObj => {
+                if (!rectangleObj.isDragging) {
+                    const rectRect = rectangleObj.element.getBoundingClientRect();
+                    const centerX = rectRect.left + rectRect.width / 2;
+                    const rotation = calculateRotation(centerX);
+                    rectangleObj.element.style.transform = `rotate(${rotation}deg)`;
+                }
+            });
+        });
+
+        // Initialize the game
+        window.addEventListener('load', () => {
+            setTimeout(initializeRectangles, 100);
+        });
+    </script>
+</body>
+</html>
+
+I want you to modify this to be a card game. Here are the changes I want you to make.
+
+Change 1: The game area should be divided into 7 rows. The top row of rectangles/cards should be in the top row, and the bottom row of rectangles/cards should be in the bottom row.
+
+Change 2: The middle row of cards should be in the middle row. The cards should be stacked into a deck instead of a row. The order of the rectangles in the deck should not be visible. However, a button should be added that moves the top card of the deck to the top row. Another similar button should be added that moves the top card of the deck to the bottom row. These new buttons should be in the middle row.
+
+Change 3: The top row should be rotated the opposite direction. Currently, cards on the right should are rotated clockwise, and cards on the left are rotate counterclockwise. Instead, in the top row, cards on the right should be rotated counterclockwise, and cards on the left should be rotated clockwise. The angle of rotation should not change.
+
+Change 4: When a card is being dragged, it should not be rotated. Cards should only be rotated if they are in the top or bottom row and not being dragged.
+
+Change 5: When a card is dragged from the bottom row or top row to the deck, it should put that card onto the top of the deck.
+
+Implement these changes. Do the changes one by one. Let's think step by step. Explain each step.
