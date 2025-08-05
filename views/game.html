@@ -18,7 +18,7 @@
         
         .playground-area {
             width: 90vw;
-            height: 75vh;
+            height: 80vh;
             background: rgba(255, 255, 255, 0.95);
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 20px;
@@ -39,50 +39,16 @@
             position: relative;
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
-        
-        .game-row:last-child {
+
+        #row2,
+        #row5,
+        #row6 {
             border-bottom: none;
         }
         
-        .deck-area {
-            position: relative;
-            width: 60px;
-            height: 90px;
-            margin: 0 20px;
-        }
-        
-        .deck-buttons {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .deck-button {
-            padding: 8px 16px;
-            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease;
-            font-size: 12px;
-        }
-        
-        .deck-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        .deck-button:active {
-            transform: translateY(0);
-        }
-        
-        .draggable-rectangle {
-            width: 35px;
-            height: 70px;
+        .card {
+            width: 70px;
+            height: 140px;
             border-radius: 8px;
             position: absolute;
             cursor: move;
@@ -96,22 +62,22 @@
             transition: transform 0.3s ease;
         }
         
-        .draggable-rectangle:hover {
-            transform: scale(1.05);
+        .card:hover {
+            transform: scale(1.5);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
             border-color: rgba(255, 255, 255, 1);
             transition: all 0.1s ease;
         }
         
-        .draggable-rectangle.dragging {
-            transform: scale(1.1);
+        .card.dragging {
+            transform: scale(1.3);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             z-index: 2000;
             border-color: rgba(255, 255, 255, 1);
             transition: none;
         }
         
-        .draggable-rectangle.in-deck {
+        .card.in-deck {
             cursor: default;
             pointer-events: none;
             opacity: 0;
@@ -119,8 +85,8 @@
         }
         
         .deck-placeholder {
-            width: 35px;
-            height: 70px;
+            width: 70px;
+            height: 140px;
             border: 2px dashed rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             background: rgba(0, 0, 0, 0.1);
@@ -131,82 +97,55 @@
             color: rgba(0, 0, 0, 0.5);
             font-weight: bold;
         }
-        
-        .info-text {
-            font-style: italic;
-            color: rgba(255, 255, 255, 0.9);
-            margin: 10px 0;
-            text-align: center;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            font-size: 16px;
-        }
-        
-        .title {
-            color: white;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientShift 3s ease-in-out infinite;
-        }
-        
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-        
-        .rectangle-info {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px 30px;
-            border-radius: 25px;
-            margin: 10px 0;
+
+        .stack {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100px;
+            height: 200px;
+            background: rgba(255, 0, 0, 0.15);
+            border-left: 2px solid red;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: red;
             font-weight: bold;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            pointer-events: none; /* Allow dragging over it */
+            z-index: 5000;
         }
     </style>
 </head>
 <body>
-    <h1 class="title">🎴 Card Game Playground</h1>
-    
-    <div class="rectangle-info">60 Unique Colorful Cards</div>
-    
+    <h1 class="title">Working Title asdf</h1>
+        
     <div class="playground-area" id="playgroundArea">
         <div class="game-row" id="row1"></div>
         <div class="game-row" id="row2"></div>
         <div class="game-row" id="row3"></div>
         <div class="game-row" id="row4">
-            <button class="deck-button" id="dealToTop">Deal to Top</button>
-            <div class="deck-area" id="deckArea">
-                <div class="deck-placeholder" id="deckPlaceholder">DECK</div>
-            </div>
-            <button class="deck-button" id="dealToBottom">Deal to Bottom</button>
+            <div class="deck-placeholder" id="deckPlaceholder">DECK</div>
         </div>
         <div class="game-row" id="row5"></div>
         <div class="game-row" id="row6"></div>
         <div class="game-row" id="row7"></div>
+        <div class="stack" id="stack">Stack</div>
     </div>
-    
-    <p class="info-text">Drag cards between rows - Top and bottom rows have special rotation!</p>
-    <p class="info-text">Use the buttons to deal cards from the deck to top or bottom rows!</p>
-    <p class="info-text">Top row cards can only move to rows 2-3, bottom row cards can only move to rows 5-6!</p>
 
     <script>
         class CardGamePlayground {
             constructor() {
                 this.playgroundArea = document.getElementById('playgroundArea');
-                this.deckArea = document.getElementById('deckArea');
                 this.deckPlaceholder = document.getElementById('deckPlaceholder');
-                this.dealToTopBtn = document.getElementById('dealToTop');
-                this.dealToBottomBtn = document.getElementById('dealToBottom');
+                this.stack = document.getElementById('stack');
                 
-                this.rectangles = [];
+                this.topHand = [];
+                this.bottomHand = [];
+                this.topPermanents = [];
+                this.bottomPermanents = [];
+                this.stack = [];
+                this.cards = []; // all cards not in deck or stack
                 this.deck = [];
                 this.isDragging = false;
                 this.currentDragCard = null;
@@ -214,12 +153,10 @@
                 this.mousePosition = { x: 0, y: 0 };
                 
                 // Constants
-                this.TOTAL_RECTANGLES = 60;
-                this.TOP_ROW_COUNT = 7;
-                this.BOTTOM_ROW_COUNT = 7;
-                this.CARD_WIDTH = 35;
-                this.CARD_HEIGHT = 70;
-                this.MAX_ROTATION = 20;
+                this.TOTAL_CARDS = 60;
+                this.CARD_WIDTH = 70;
+                this.CARD_HEIGHT = 140;
+                this.MAX_ROTATION = 25;
                 this.HOVER_DISTANCE = 50; // Distance threshold for hover detection
                 
                 this.init();
@@ -228,7 +165,7 @@
             init() {
                 this.setupEventListeners();
                 // Delay initialization to ensure DOM is ready
-                setTimeout(() => this.initializeRectangles(), 100);
+                setTimeout(() => this.initializeGame(), 100);
             }
             
             setupEventListeners() {
@@ -242,27 +179,112 @@
                 document.addEventListener('mousemove', this.boundTrackMouse, { passive: true });
                 document.addEventListener('mouseup', this.boundStopDrag);
                 window.addEventListener('resize', this.boundHandleResize);
+            }
+
+            initializeGame() {
+                const colors = this.generateUniqueColors(this.TOTAL_CARDS);
+                const playgroundWidth = this.playgroundArea.offsetWidth;
+                const playgroundHeight = this.playgroundArea.offsetHeight;
                 
-                this.dealToTopBtn.addEventListener('click', () => this.dealCardToRow('top'));
-                this.dealToBottomBtn.addEventListener('click', () => this.dealCardToRow('bottom'));
+                // Shuffle indices
+                const indices = Array.from({length: this.TOTAL_CARDS}, (_, i) => i);
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+
+                deckIndices.forEach((colorIndex) => {
+                    const card = this.createCard(colors[colorIndex], 0, 0);
+                    this.addToDeck(card);
+                });
+                
+                for (let i = 0; i < 7; i++) {
+                    this.draw(0);
+                }
+
+                for (let i = 0; i < 7; i++) {
+                    this.draw(6);
+                }
+            }
+
+            createCard(color, x, y) {
+                const rect = document.createElement('div');
+                rect.className = 'card';
+                rect.style.backgroundColor = color;
+                rect.style.left = x + 'px';
+                rect.style.top = y + 'px';
+                
+                this.playgroundArea.appendChild(rect);
+                
+                const card = {
+                    element: rect,
+                    isDragging: false,
+                    color: color
+                };
+                
+                rect.addEventListener('mousedown', (e) => this.startDrag(e, card));
+                
+                return card;
+            }
+
+            addToDeck(card) {
+                // Remove from cards array if it exists there
+                const index = this.cards.indexOf(card);
+                if (index > -1) {
+                    this.cards.splice(index, 1);
+                }
+                
+                this.deck.unshift(card);
+                card.element.classList.add('in-deck');
+            }
+
+            draw(row) {
+                const card = this.removeFromDeck();
+                
+                this.playgroundArea.appendChild(card.element);
+                
+                if (row === 0) {
+                    // Add to top row and reposition all top row cards
+                    const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
+                    const y = 30;
+                    card.element.style.left = x + 'px';
+                    card.element.style.top = y + 'px';
+                    card.originalPosition = { x: x, y: y };
+                    
+                } else {
+                    // Add to bottom row and reposition all bottom row cards
+                    const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
+                    const y = this.playgroundArea.offsetHeight - 100;
+                    card.element.style.left = x + 'px';
+                    card.element.style.top = y + 'px';
+                    card.originalPosition = { x: x, y: y };                    
+                }
+                setTimeout(() => this.reposition(), 50);
+            }
+
+            removeFromDeck() {
+                if (this.deck.length === 0) return null;
+                
+                const card = this.deck.shift();
+                card.element.classList.remove('in-deck');
+                this.cards.push(card);
+                
+                this.updateDeckDisplay();
+                return card;
             }
             
-            // Change 1: Track mouse position for hover detection
             trackMouse(e) {
                 this.mousePosition.x = e.clientX;
                 this.mousePosition.y = e.clientY;
                 
                 // Update rotation for all cards based on cursor proximity
-                this.rectangles.forEach(rectangleObj => {
-                    if (!rectangleObj.isDragging) {
-                        this.updateCardRotation(rectangleObj);
-                    }
+                this.cards.forEach(card => {
+                        this.updateCardRotation(card);
                 });
             }
             
-            // Change 1: Check if card is near cursor
-            isCardNearCursor(rectangleObj) {
-                const rect = rectangleObj.element.getBoundingClientRect();
+            isCardNearCursor(card) {
+                const rect = card.element.getBoundingClientRect();
                 const cardCenterX = rect.left + rect.width / 2;
                 const cardCenterY = rect.top + rect.height / 2;
                 
@@ -292,9 +314,8 @@
                 return isTopRow ? -baseRotation : baseRotation;
             }
             
-            // Change 2: Determine which row a card is in
-            getCardRow(rectangleObj) {
-                const rect = rectangleObj.element.getBoundingClientRect();
+            getCardRow(card) {
+                const rect = card.element.getBoundingClientRect();
                 const playgroundRect = this.playgroundArea.getBoundingClientRect();
                 const relativeY = rect.top - playgroundRect.top;
                 const playgroundHeight = this.playgroundArea.offsetHeight;
@@ -304,88 +325,20 @@
                 return Math.max(0, Math.min(6, rowIndex)); // Clamp to 0-6 (rows 1-7)
             }
             
-            isInTopOrBottomRow(element) {
-                const rect = element.getBoundingClientRect();
-                const playgroundRect = this.playgroundArea.getBoundingClientRect();
-                const relativeY = rect.top - playgroundRect.top;
-                const playgroundHeight = this.playgroundArea.offsetHeight;
-                
-                const isTopRow = relativeY < playgroundHeight * 0.15;
-                const isBottomRow = relativeY > playgroundHeight * 0.85;
-                
-                return { isTopRow, isBottomRow };
-            }
-            
-            updateCardRotation(rectangleObj) {
-                if (rectangleObj.isDragging) return;
-                
-                // Change 1: Don't rotate cards that are near the cursor
-                if (this.isCardNearCursor(rectangleObj)) {
-                    rectangleObj.element.style.transform = 'rotate(0deg)';
-                    return;
-                }
-                
-                const { isTopRow, isBottomRow } = this.isInTopOrBottomRow(rectangleObj.element);
-                
-                if (isTopRow || isBottomRow) {
-                    const rect = rectangleObj.element.getBoundingClientRect();
+            updateCardRotation(card) {
+                if (this.isCardNearCursor(card)) return;
+
+                if (row === 0 || row === 6) {
+                    const rect = card.element.getBoundingClientRect();
                     const centerX = rect.left + rect.width / 2;
                     const rotation = this.calculateRotation(centerX, isTopRow);
-                    rectangleObj.element.style.transform = `rotate(${rotation}deg)`;
+                    card.element.style.transform = `rotate(${rotation}deg)`;
                 } else {
-                    rectangleObj.element.style.transform = 'rotate(0deg)';
+                    card.element.style.transform = "rotate(0deg)";
                 }
             }
             
-            createRectangle(color, x, y) {
-                const rect = document.createElement('div');
-                rect.className = 'draggable-rectangle';
-                rect.style.backgroundColor = color;
-                rect.style.left = x + 'px';
-                rect.style.top = y + 'px';
-                
-                this.playgroundArea.appendChild(rect);
-                
-                const rectangleObj = {
-                    element: rect,
-                    isDragging: false,
-                    color: color,
-                    originalPosition: { x: x, y: y }, // Change 2: Store original position
-                    originalRow: this.getCardRow({ element: rect }) // Change 2: Store original row
-                };
-                
-                rect.addEventListener('mousedown', (e) => this.startDrag(e, rectangleObj));
-                
-                return rectangleObj;
-            }
-            
-            addToDeck(rectangleObj) {
-                // Remove from rectangles array if it exists there
-                const index = this.rectangles.indexOf(rectangleObj);
-                if (index > -1) {
-                    this.rectangles.splice(index, 1);
-                }
-                
-                // Add to deck
-                this.deck.unshift(rectangleObj);
-                rectangleObj.element.classList.add('in-deck');
-                
-                // Change 3: Reposition cards in the row the card was removed from
-                this.repositionRowCards();
-                
-                this.updateDeckDisplay();
-            }
-            
-            removeFromDeck() {
-                if (this.deck.length === 0) return null;
-                
-                const card = this.deck.shift();
-                card.element.classList.remove('in-deck');
-                this.rectangles.push(card);
-                
-                this.updateDeckDisplay();
-                return card;
-            }
+
             
             updateDeckDisplay() {
                 const deckCount = this.deck.length;
@@ -393,15 +346,13 @@
                 this.deckPlaceholder.style.opacity = deckCount === 0 ? '0.5' : '1';
             }
             
-            // Change 3: Get cards in a specific row
             getCardsInRow(rowIndex) {
-                return this.rectangles.filter(rectangleObj => {
-                    const cardRow = this.getCardRow(rectangleObj);
+                return this.cards.filter(card => {
+                    const cardRow = this.getCardRow(card);
                     return cardRow === rowIndex;
                 });
             }
             
-            // Change 3: Reposition all cards in top and bottom rows
             repositionRowCards() {
                 const topRowCards = this.getCardsInRow(0);
                 const bottomRowCards = this.getCardsInRow(6);
@@ -410,7 +361,6 @@
                 this.positionCardsInRow(bottomRowCards, this.playgroundArea.offsetHeight - 100); // Bottom row
             }
             
-            // Change 3: Position cards evenly in a row
             positionCardsInRow(cards, y) {
                 if (cards.length === 0) return;
                 
@@ -432,65 +382,7 @@
                 });
             }
             
-            dealCardToRow(targetRow) {
-                const card = this.removeFromDeck();
-                if (!card) return;
-                
-                this.playgroundArea.appendChild(card.element);
-                
-                if (targetRow === 'top') {
-                    // Add to top row and reposition all top row cards
-                    const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
-                    const y = 30;
-                    card.element.style.left = x + 'px';
-                    card.element.style.top = y + 'px';
-                    card.originalPosition = { x: x, y: y };
-                    card.originalRow = 0;
-                    
-                    setTimeout(() => this.repositionRowCards(), 50);
-                } else {
-                    // Add to bottom row and reposition all bottom row cards
-                    const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
-                    const y = this.playgroundArea.offsetHeight - 90;
-                    card.element.style.left = x + 'px';
-                    card.element.style.top = y + 'px';
-                    card.originalPosition = { x: x, y: y };
-                    card.originalRow = 6;
-                    
-                    setTimeout(() => this.repositionRowCards(), 50);
-                }
-                
-                this.updateCardRotation(card);
-            }
             
-            initializeRectangles() {
-                const colors = this.generateUniqueColors(this.TOTAL_RECTANGLES);
-                const playgroundWidth = this.playgroundArea.offsetWidth;
-                const playgroundHeight = this.playgroundArea.offsetHeight;
-                
-                // Shuffle indices
-                const indices = Array.from({length: this.TOTAL_RECTANGLES}, (_, i) => i);
-                for (let i = indices.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [indices[i], indices[j]] = [indices[j], indices[i]];
-                }
-                
-                const topRowIndices = indices.slice(0, this.TOP_ROW_COUNT);
-                const bottomRowIndices = indices.slice(this.TOP_ROW_COUNT, this.TOP_ROW_COUNT + this.BOTTOM_ROW_COUNT);
-                const deckIndices = indices.slice(this.TOP_ROW_COUNT + this.BOTTOM_ROW_COUNT);
-                
-                // Position top row cards
-                this.positionRowCards(topRowIndices, colors, playgroundWidth, 30);
-                
-                // Position bottom row cards
-                this.positionRowCards(bottomRowIndices, colors, playgroundWidth, playgroundHeight - 90);
-                
-                // Add remaining cards to deck
-                deckIndices.forEach((colorIndex) => {
-                    const rectangle = this.createRectangle(colors[colorIndex], 0, 0);
-                    this.addToDeck(rectangle);
-                });
-            }
             
             positionRowCards(indices, colors, playgroundWidth, y) {
                 const spacing = 80;
@@ -510,16 +402,24 @@
                 return x >= deckRect.left && x <= deckRect.right && 
                        y >= deckRect.top && y <= deckRect.bottom;
             }
+
+            isOverBlocker(x, y) {
+                const blockerRect = this.drop-blocker.getBoundingClientRect();
+                return x >= blockerRect.left && x <= blockerRect.right && 
+                       y >= blockerRect.top && y <= blockerRect.bottom;
+            }
             
             startDrag(e, rectangleObj) {
                 if (this.deck.includes(rectangleObj)) return;
+
+                const row = rectangleObj.originalRow;
+                if (row !== 0 && row !== 6) return;
                 
                 this.isDragging = true;
                 this.currentDragCard = rectangleObj;
                 rectangleObj.isDragging = true;
                 rectangleObj.element.classList.add('dragging');
                 
-                // Change 2: Store original position when drag starts
                 const rect = rectangleObj.element.getBoundingClientRect();
                 const playgroundRect = this.playgroundArea.getBoundingClientRect();
                 rectangleObj.originalPosition = {
@@ -576,7 +476,10 @@
                 this.currentDragCard.isDragging = false;
                 this.currentDragCard.element.classList.remove('dragging');
                 
-                if (this.isOverDeck(e.clientX, e.clientY)) {
+                if (this.isOverBlocker(e.clientX, e.clientY)) {
+                    this.currentDragCard.element.style.left = this.currentDragCard.originalPosition.x + 'px';
+                    this.currentDragCard.element.style.top = this.currentDragCard.originalPosition.y + 'px';
+                } else if (this.isOverDeck(e.clientX, e.clientY)) {
                     this.addToDeck(this.currentDragCard);
                 } else {
                     // Change 2: Check if the move is valid
