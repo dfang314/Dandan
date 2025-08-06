@@ -140,13 +140,12 @@
                 this.deckPlaceholder = document.getElementById('deckPlaceholder');
                 this.stack = document.getElementById('stack');
                 
-                this.topHand = [];
-                this.bottomHand = [];
-                this.topPermanents = [];
-                this.bottomPermanents = [];
-                this.stack = [];
-                this.cards = []; // all cards not in deck or stack
                 this.deck = [];
+                this.stack = [];
+                this.topHand = [];
+                this.topField = [];
+                this.bottomHand = [];
+                this.bottomField = [];
                 this.isDragging = false;
                 this.currentDragCard = null;
                 this.dragOffset = { x: 0, y: 0 };
@@ -180,34 +179,48 @@
                 document.addEventListener('mouseup', this.boundStopDrag);
                 window.addEventListener('resize', this.boundHandleResize);
             }
+            
+            initDeck() {
+                const colors = [];
+                for (let i = 0; i < this.TOTAL_CARDS; i++) {
+                    const hue = (i * 360) / this.TOTAL_CARDS;
+                    const saturation = 70 + (i % 3) * 10;
+                    const lightness = 50 + (i % 4) * 10;
+                    colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+                }
 
-            initializeGame() {
-                const colors = this.generateUniqueColors(this.TOTAL_CARDS);
-                const playgroundWidth = this.playgroundArea.offsetWidth;
-                const playgroundHeight = this.playgroundArea.offsetHeight;
-                
-                // Shuffle indices
-                const indices = Array.from({length: this.TOTAL_CARDS}, (_, i) => i);
+                colors.forEach((color) => {
+                    const card = this.createCard(color);
+                    this.addToDeck(card);
+                });
+            }
+
+            shuffle() {
+                const indices = Array.from({length: this.deck.length}, (_, i) => i);
                 for (let i = indices.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [indices[i], indices[j]] = [indices[j], indices[i]];
                 }
+                // TODO: actually apply the shuffle
+            }
 
-                deckIndices.forEach((colorIndex) => {
-                    const card = this.createCard(colors[colorIndex], 0, 0);
-                    this.addToDeck(card);
-                });
+            initializeGame() {
+                const playgroundWidth = this.playgroundArea.offsetWidth;
+                const playgroundHeight = this.playgroundArea.offsetHeight;
+                
+                this.deck = this.initDeck();
+                this.shuffle();
                 
                 for (let i = 0; i < 7; i++) {
-                    this.draw(0);
+                    this.draw(True);
                 }
 
                 for (let i = 0; i < 7; i++) {
-                    this.draw(6);
+                    this.draw(False);
                 }
             }
 
-            createCard(color, x, y) {
+            createCard(color) {
                 const rect = document.createElement('div');
                 rect.className = 'card';
                 rect.style.backgroundColor = color;
@@ -219,7 +232,8 @@
                 const card = {
                     element: rect,
                     isDragging: false,
-                    color: color
+                    color: color,
+                    pos: "deck", // deck, stack, topHand, topField, bottomHand, bottomField
                 };
                 
                 rect.addEventListener('mousedown', (e) => this.startDrag(e, card));
@@ -228,59 +242,56 @@
             }
 
             addToDeck(card) {
-                // Remove from cards array if it exists there
-                const index = this.cards.indexOf(card);
-                if (index > -1) {
-                    this.cards.splice(index, 1);
-                }
-                
                 this.deck.unshift(card);
                 card.element.classList.add('in-deck');
+                card.pos = "deck";
             }
 
-            draw(row) {
-                const card = this.removeFromDeck();
-                
-                this.playgroundArea.appendChild(card.element);
-                
-                if (row === 0) {
-                    // Add to top row and reposition all top row cards
-                    const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
-                    const y = 30;
-                    card.element.style.left = x + 'px';
-                    card.element.style.top = y + 'px';
-                    card.originalPosition = { x: x, y: y };
-                    
-                } else {
-                    // Add to bottom row and reposition all bottom row cards
-                    const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
-                    const y = this.playgroundArea.offsetHeight - 100;
-                    card.element.style.left = x + 'px';
-                    card.element.style.top = y + 'px';
-                    card.originalPosition = { x: x, y: y };                    
-                }
-                setTimeout(() => this.reposition(), 50);
-            }
-
-            removeFromDeck() {
-                if (this.deck.length === 0) return null;
-                
+            getFromDeck() {
                 const card = this.deck.shift();
                 card.element.classList.remove('in-deck');
-                this.cards.push(card);
+            }
+
+            draw(top) {
+                const card = this.cardFromDeck();
+                if (top) {
+                    card.pos = "topHand";
+                    this.topHand.unshift(card);
+                } else {
+                    card.pos = "bottomHand";
+                    this.bottomHand.unshift(card);
+                }
+                this.playgroundArea.appendChild(card.element);
                 
-                this.updateDeckDisplay();
-                return card;
+                setTimeout(() => this.reposition(), 50);
+                setTimeout(() => this.updateDeckDisplay(), 50);
+                // if (row === 0) {
+                //     // Add to top row and reposition all top row cards
+                //     const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
+                //     const y = 30;
+                //     card.element.style.left = x + 'px';
+                //     card.element.style.top = y + 'px';
+                    
+                // } else {
+                //     // Add to bottom row and reposition all bottom row cards
+                //     const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
+                //     const y = this.playgroundArea.offsetHeight - 100;
+                //     card.element.style.left = x + 'px';
+                //     card.element.style.top = y + 'px';                  
+                // }
             }
             
             trackMouse(e) {
                 this.mousePosition.x = e.clientX;
                 this.mousePosition.y = e.clientY;
                 
-                // Update rotation for all cards based on cursor proximity
-                this.cards.forEach(card => {
-                        this.updateCardRotation(card);
-                });
+                // TODO: Make card near mouse bigger or something
+                // this.topHand.forEach(card => {
+                //     this.updateCardRotation(card);
+                // });
+                // this.bottomHand.forEach(card => {
+                //     this.updateCardRotation(card);
+                // });
             }
             
             isCardNearCursor(card) {
@@ -297,22 +308,15 @@
             }
             
             generateUniqueColors(count) {
-                const colors = [];
-                for (let i = 0; i < count; i++) {
-                    const hue = (i * 360) / count;
-                    const saturation = 70 + (i % 3) * 10;
-                    const lightness = 50 + (i % 4) * 10;
-                    colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-                }
-                return colors;
+                
             }
             
-            calculateRotation(x, isTopRow = false) {
-                const screenWidth = window.innerWidth;
-                const relativePosition = Math.max(-1, Math.min(1, (x - screenWidth / 2) / (screenWidth / 2)));
-                const baseRotation = relativePosition * this.MAX_ROTATION;
-                return isTopRow ? -baseRotation : baseRotation;
-            }
+            // calculateRotation(x, isTopRow = false) {
+            //     const screenWidth = window.innerWidth;
+            //     const relativePosition = Math.max(-1, Math.min(1, (x - screenWidth / 2) / (screenWidth / 2)));
+            //     const baseRotation = relativePosition * this.MAX_ROTATION;
+            //     return isTopRow ? -baseRotation : baseRotation;
+            // }
             
             getCardRow(card) {
                 const rect = card.element.getBoundingClientRect();
@@ -326,8 +330,7 @@
             }
             
             updateCardRotation(card) {
-                if (this.isCardNearCursor(card)) return;
-
+                const row = this.getCardRow(card);
                 if (row === 0 || row === 6) {
                     const rect = card.element.getBoundingClientRect();
                     const centerX = rect.left + rect.width / 2;
@@ -338,27 +341,20 @@
                 }
             }
             
-
-            
             updateDeckDisplay() {
                 const deckCount = this.deck.length;
                 this.deckPlaceholder.textContent = deckCount === 0 ? 'EMPTY' : `DECK (${deckCount})`;
                 this.deckPlaceholder.style.opacity = deckCount === 0 ? '0.5' : '1';
             }
             
-            getCardsInRow(rowIndex) {
-                return this.cards.filter(card => {
-                    const cardRow = this.getCardRow(card);
-                    return cardRow === rowIndex;
+            repositionCards() {     
+                this.cards.forEach(card => {
+                    const row = this.getCardRow(card);
+                    // row 0
+
+                    // row 6
                 });
-            }
-            
-            repositionRowCards() {
-                const topRowCards = this.getCardsInRow(0);
-                const bottomRowCards = this.getCardsInRow(6);
-                
-                this.positionCardsInRow(topRowCards, 30); // Top row
-                this.positionCardsInRow(bottomRowCards, this.playgroundArea.offsetHeight - 100); // Bottom row
+
             }
             
             positionCardsInRow(cards, y) {
@@ -381,8 +377,6 @@
                     this.updateCardRotation(rectangleObj);
                 });
             }
-            
-            
             
             positionRowCards(indices, colors, playgroundWidth, y) {
                 const spacing = 80;
@@ -515,8 +509,8 @@
                 if (this.resizeTimeout) return;
                 
                 this.resizeTimeout = setTimeout(() => {
-                    this.rectangles.forEach(rectangleObj => {
-                        if (!rectangleObj.isDragging) {
+                    this.cards.forEach(card => {
+                        if (!card.isDragging) {
                             this.updateCardRotation(rectangleObj);
                         }
                     });
@@ -538,15 +532,15 @@
                 }
                 
                 // Clean up card elements
-                this.rectangles.forEach(rect => {
-                    if (rect.element.parentElement) {
-                        rect.element.parentElement.removeChild(rect.element);
+                this.cards.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
                     }
                 });
                 
-                this.deck.forEach(rect => {
-                    if (rect.element.parentElement) {
-                        rect.element.parentElement.removeChild(rect.element);
+                this.deck.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
                     }
                 });
             }
