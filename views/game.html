@@ -264,7 +264,7 @@
                 this.playgroundArea.appendChild(card.element);
                 
                 setTimeout(() => this.reposition(), 50);
-                setTimeout(() => this.updateDeckDisplay(), 50);
+                setTimeout(() => this.updateDeckDisplay(), 60);
                 // if (row === 0) {
                 //     // Add to top row and reposition all top row cards
                 //     const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
@@ -306,11 +306,7 @@
                 
                 return distance < this.HOVER_DISTANCE;
             }
-            
-            generateUniqueColors(count) {
-                
-            }
-            
+
             // calculateRotation(x, isTopRow = false) {
             //     const screenWidth = window.innerWidth;
             //     const relativePosition = Math.max(-1, Math.min(1, (x - screenWidth / 2) / (screenWidth / 2)));
@@ -318,16 +314,16 @@
             //     return isTopRow ? -baseRotation : baseRotation;
             // }
             
-            getCardRow(card) {
-                const rect = card.element.getBoundingClientRect();
-                const playgroundRect = this.playgroundArea.getBoundingClientRect();
-                const relativeY = rect.top - playgroundRect.top;
-                const playgroundHeight = this.playgroundArea.offsetHeight;
-                const rowHeight = playgroundHeight / 7;
+            // getCardRow(card) {
+            //     const rect = card.element.getBoundingClientRect();
+            //     const playgroundRect = this.playgroundArea.getBoundingClientRect();
+            //     const relativeY = rect.top - playgroundRect.top;
+            //     const playgroundHeight = this.playgroundArea.offsetHeight;
+            //     const rowHeight = playgroundHeight / 7;
                 
-                const rowIndex = Math.floor(relativeY / rowHeight);
-                return Math.max(0, Math.min(6, rowIndex)); // Clamp to 0-6 (rows 1-7)
-            }
+            //     const rowIndex = Math.floor(relativeY / rowHeight);
+            //     return Math.max(0, Math.min(6, rowIndex)); // Clamp to 0-6 (rows 1-7)
+            // }
             
             updateCardRotation(card) {
                 const row = this.getCardRow(card);
