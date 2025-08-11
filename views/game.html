@@ -325,17 +325,17 @@
             //     return Math.max(0, Math.min(6, rowIndex)); // Clamp to 0-6 (rows 1-7)
             // }
             
-            updateCardRotation(card) {
-                const row = this.getCardRow(card);
-                if (row === 0 || row === 6) {
-                    const rect = card.element.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const rotation = this.calculateRotation(centerX, isTopRow);
-                    card.element.style.transform = `rotate(${rotation}deg)`;
-                } else {
-                    card.element.style.transform = "rotate(0deg)";
-                }
-            }
+            // updateCardRotation(card) {
+            //     const row = this.getCardRow(card);
+            //     if (row === 0 || row === 6) {
+            //         const rect = card.element.getBoundingClientRect();
+            //         const centerX = rect.left + rect.width / 2;
+            //         const rotation = this.calculateRotation(centerX, isTopRow);
+            //         card.element.style.transform = `rotate(${rotation}deg)`;
+            //     } else {
+            //         card.element.style.transform = "rotate(0deg)";
+            //     }
+            // }
             
             updateDeckDisplay() {
                 const deckCount = this.deck.length;
@@ -344,48 +344,49 @@
             }
             
             repositionCards() {     
-                this.cards.forEach(card => {
-                    const row = this.getCardRow(card);
-                    // row 0
+                this.topHand.forEach(card => {
 
-                    // row 6
                 });
+                this.topField.forEach(card => {
+
+                });
+                // TODO: position
 
             }
             
-            positionCardsInRow(cards, y) {
-                if (cards.length === 0) return;
+            // positionCardsInRow(cards, y) {
+            //     if (cards.length === 0) return;
                 
-                const playgroundWidth = this.playgroundArea.offsetWidth;
-                const spacing = cards.length > 1 ? Math.min(80, (playgroundWidth - 100) / (cards.length - 1)) : 0;
-                const totalWidth = (cards.length - 1) * spacing;
-                const startX = (playgroundWidth - totalWidth) / 2 - (this.CARD_WIDTH / 2);
+            //     const playgroundWidth = this.playgroundArea.offsetWidth;
+            //     const spacing = cards.length > 1 ? Math.min(80, (playgroundWidth - 100) / (cards.length - 1)) : 0;
+            //     const totalWidth = (cards.length - 1) * spacing;
+            //     const startX = (playgroundWidth - totalWidth) / 2 - (this.CARD_WIDTH / 2);
                 
-                cards.forEach((rectangleObj, i) => {
-                    const x = startX + i * spacing;
-                    rectangleObj.element.style.left = x + 'px';
-                    rectangleObj.element.style.top = y + 'px';
+            //     cards.forEach((rectangleObj, i) => {
+            //         const x = startX + i * spacing;
+            //         rectangleObj.element.style.left = x + 'px';
+            //         rectangleObj.element.style.top = y + 'px';
                     
-                    // Update original position and row
-                    rectangleObj.originalPosition = { x: x, y: y };
-                    rectangleObj.originalRow = this.getCardRow(rectangleObj);
+            //         // Update original position and row
+            //         rectangleObj.originalPosition = { x: x, y: y };
+            //         rectangleObj.originalRow = this.getCardRow(rectangleObj);
                     
-                    this.updateCardRotation(rectangleObj);
-                });
-            }
+            //         this.updateCardRotation(rectangleObj);
+            //     });
+            // }
             
-            positionRowCards(indices, colors, playgroundWidth, y) {
-                const spacing = 80;
-                const totalWidth = (indices.length - 1) * spacing;
-                const startX = (playgroundWidth - totalWidth) / 2 - (this.CARD_WIDTH / 2);
+            // positionRowCards(indices, colors, playgroundWidth, y) {
+            //     const spacing = 80;
+            //     const totalWidth = (indices.length - 1) * spacing;
+            //     const startX = (playgroundWidth - totalWidth) / 2 - (this.CARD_WIDTH / 2);
                 
-                indices.forEach((colorIndex, i) => {
-                    const x = startX + i * spacing;
-                    const rectangle = this.createRectangle(colors[colorIndex], x, y);
-                    this.rectangles.push(rectangle);
-                    this.updateCardRotation(rectangle);
-                });
-            }
+            //     indices.forEach((colorIndex, i) => {
+            //         const x = startX + i * spacing;
+            //         const rectangle = this.createRectangle(colors[colorIndex], x, y);
+            //         this.rectangles.push(rectangle);
+            //         this.updateCardRotation(rectangle);
+            //     });
+            // }
             
             isOverDeck(x, y) {
                 const deckRect = this.deckArea.getBoundingClientRect();
