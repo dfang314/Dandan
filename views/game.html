@@ -157,6 +157,7 @@
                 this.CARD_HEIGHT = 140;
                 this.MAX_ROTATION = 25;
                 this.HOVER_DISTANCE = 50; // Distance threshold for hover detection
+                this.HAND_HEIGHT = 200;
                 
                 this.init();
             }
@@ -191,7 +192,9 @@
 
                 colors.forEach((color) => {
                     const card = this.createCard(color);
-                    this.addToDeck(card);
+                    this.deck.unshift(card);
+                    card.element.classList.add('in-deck');
+                    card.pos = "deck";
                 });
             }
 
@@ -241,19 +244,9 @@
                 return card;
             }
 
-            addToDeck(card) {
-                this.deck.unshift(card);
-                card.element.classList.add('in-deck');
-                card.pos = "deck";
-            }
-
-            getFromDeck() {
+            draw(top) {
                 const card = this.deck.shift();
                 card.element.classList.remove('in-deck');
-            }
-
-            draw(top) {
-                const card = this.cardFromDeck();
                 if (top) {
                     card.pos = "topHand";
                     this.topHand.unshift(card);
@@ -263,8 +256,7 @@
                 }
                 this.playgroundArea.appendChild(card.element);
                 
-                setTimeout(() => this.reposition(), 50);
-                setTimeout(() => this.updateDeckDisplay(), 60);
+                setTimeout(() => this.repositionAndUpdate(), 50);
                 // if (row === 0) {
                 //     // Add to top row and reposition all top row cards
                 //     const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
@@ -337,13 +329,12 @@
             //     }
             // }
             
-            updateDeckDisplay() {
+            repositionAndUpdate() {
+
                 const deckCount = this.deck.length;
                 this.deckPlaceholder.textContent = deckCount === 0 ? 'EMPTY' : `DECK (${deckCount})`;
                 this.deckPlaceholder.style.opacity = deckCount === 0 ? '0.5' : '1';
-            }
-            
-            repositionCards() {     
+
                 this.topHand.forEach(card => {
 
                 });
@@ -388,40 +379,20 @@
             //     });
             // }
             
-            isOverDeck(x, y) {
-                const deckRect = this.deckArea.getBoundingClientRect();
-                return x >= deckRect.left && x <= deckRect.right && 
-                       y >= deckRect.top && y <= deckRect.bottom;
-            }
+            startDrag(e, card) {
 
-            isOverBlocker(x, y) {
-                const blockerRect = this.drop-blocker.getBoundingClientRect();
-                return x >= blockerRect.left && x <= blockerRect.right && 
-                       y >= blockerRect.top && y <= blockerRect.bottom;
-            }
-            
-            startDrag(e, rectangleObj) {
-                if (this.deck.includes(rectangleObj)) return;
-
-                const row = rectangleObj.originalRow;
-                if (row !== 0 && row !== 6) return;
+                if (card.pos !== "topHand" && card.pos !== "bottomHand") return;
                 
                 this.isDragging = true;
-                this.currentDragCard = rectangleObj;
-                rectangleObj.isDragging = true;
-                rectangleObj.element.classList.add('dragging');
+                this.currentDragCard = card;
+                card.isDragging = true;
+                card.element.classList.add('dragging');
                 
-                const rect = rectangleObj.element.getBoundingClientRect();
+                const rect = card.element.getBoundingClientRect();
                 const playgroundRect = this.playgroundArea.getBoundingClientRect();
-                rectangleObj.originalPosition = {
-                    x: rect.left - playgroundRect.left,
-                    y: rect.top - playgroundRect.top
-                };
-                rectangleObj.originalRow = this.getCardRow(rectangleObj);
                 
-                const rectRect = rectangleObj.element.getBoundingClientRect();
-                this.dragOffset.x = e.clientX - rectRect.left;
-                this.dragOffset.y = e.clientY - rectRect.top;
+                this.dragOffset.x = e.clientX - rect.left;
+                this.dragOffset.y = e.clientY - rect.top;
                 
                 e.preventDefault();
             }
@@ -442,22 +413,8 @@
                 this.currentDragCard.element.style.top = y + 'px';
             }
             
-            // Change 2: Check if move is valid based on original row
-            isValidMove(rectangleObj, targetRow) {
-                const originalRow = rectangleObj.originalRow;
-                
-                // Top row (row 0) can only move to rows 1-2 (second and third rows)
-                if (originalRow === 0) {
-                    return targetRow === 1 || targetRow === 2;
-                }
-                
-                // Bottom row (row 6) can only move to rows 4-5 (fifth and sixth rows)
-                if (originalRow === 6) {
-                    return targetRow === 4 || targetRow === 5;
-                }
-                
-                // Cards from other rows can move anywhere
-                return true;
+            attemptPlay(card) {
+                // TODO: play the card
             }
             
             stopDrag(e) {
@@ -466,55 +423,52 @@
                 this.isDragging = false;
                 this.currentDragCard.isDragging = false;
                 this.currentDragCard.element.classList.remove('dragging');
-                
-                if (this.isOverBlocker(e.clientX, e.clientY)) {
-                    this.currentDragCard.element.style.left = this.currentDragCard.originalPosition.x + 'px';
-                    this.currentDragCard.element.style.top = this.currentDragCard.originalPosition.y + 'px';
-                } else if (this.isOverDeck(e.clientX, e.clientY)) {
-                    this.addToDeck(this.currentDragCard);
+
+                const playgroundRect = this.playgroundArea.getBoundingClientRect();
+                let y = e.clientY - playgroundRect.top - this.dragOffset.y;
+                if (y > playgroundRect.height - this.HAND_HEIGHT) {
+                    setTimeout(() => this.repositionAndUpdate(), 50);
                 } else {
-                    // Change 2: Check if the move is valid
-                    const currentRow = this.getCardRow(this.currentDragCard);
-                    const isValidMove = this.isValidMove(this.currentDragCard, currentRow);
-                    
-                    if (!isValidMove) {
-                        // Return card to original position
-                        this.currentDragCard.element.style.left = this.currentDragCard.originalPosition.x + 'px';
-                        this.currentDragCard.element.style.top = this.currentDragCard.originalPosition.y + 'px';
-                    } else {
-                        // Ensure card stays in playground
-                        if (this.currentDragCard.element.parentElement !== this.playgroundArea) {
-                            this.playgroundArea.appendChild(this.currentDragCard.element);
-                        }
-                        
-                        // Change 3: If card was moved to/from top or bottom row, reposition cards
-                        const newRow = this.getCardRow(this.currentDragCard);
-                        if (this.currentDragCard.originalRow === 0 || this.currentDragCard.originalRow === 6 || 
-                            newRow === 0 || newRow === 6) {
-                            setTimeout(() => this.repositionRowCards(), 50);
-                        }
-                    }
-                    
-                    this.updateCardRotation(this.currentDragCard);
+                    attemptPlay(this.currentDragCard);
                 }
+                
+                // if (this.isOverBlocker(e.clientX, e.clientY)) {
+                //     this.currentDragCard.element.style.left = this.currentDragCard.originalPosition.x + 'px';
+                //     this.currentDragCard.element.style.top = this.currentDragCard.originalPosition.y + 'px';
+                // } else if (this.isOverDeck(e.clientX, e.clientY)) {
+                //     this.addToDeck(this.currentDragCard);
+                // } else {
+                //     // Change 2: Check if the move is valid
+                //     const currentRow = this.getCardRow(this.currentDragCard);
+                //     const isValidMove = this.isValidMove(this.currentDragCard, currentRow);
+                    
+                //     if (!isValidMove) {
+                //         // Return card to original position
+                //         this.currentDragCard.element.style.left = this.currentDragCard.originalPosition.x + 'px';
+                //         this.currentDragCard.element.style.top = this.currentDragCard.originalPosition.y + 'px';
+                //     } else {
+                //         // Ensure card stays in playground
+                //         if (this.currentDragCard.element.parentElement !== this.playgroundArea) {
+                //             this.playgroundArea.appendChild(this.currentDragCard.element);
+                //         }
+                        
+                //         // Change 3: If card was moved to/from top or bottom row, reposition cards
+                //         const newRow = this.getCardRow(this.currentDragCard);
+                //         if (this.currentDragCard.originalRow === 0 || this.currentDragCard.originalRow === 6 || 
+                //             newRow === 0 || newRow === 6) {
+                //             setTimeout(() => this.repositionRowCards(), 50);
+                //         }
+                //     }
+                    
+                //     this.updateCardRotation(this.currentDragCard);
+                // }
                 
                 this.currentDragCard = null;
             }
             
             handleResize() {
                 // Throttle resize handling
-                if (this.resizeTimeout) return;
-                
-                this.resizeTimeout = setTimeout(() => {
-                    this.cards.forEach(card => {
-                        if (!card.isDragging) {
-                            this.updateCardRotation(rectangleObj);
-                        }
-                    });
-                    // Change 3: Reposition cards after resize
-                    this.repositionRowCards();
-                    this.resizeTimeout = null;
-                }, 100);
+                // TODO: handle this
             }
             
             // Cleanup method for potential memory leaks
@@ -529,13 +483,37 @@
                 }
                 
                 // Clean up card elements
-                this.cards.forEach(card => {
+                this.topHand.forEach(card => {
                     if (card.element.parentElement) {
                         card.element.parentElement.removeChild(card.element);
                     }
                 });
                 
+                this.topField.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+
                 this.deck.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+
+                this.stack.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+
+                this.bottomField.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+
+                this.bottomHand.forEach(card => {
                     if (card.element.parentElement) {
                         card.element.parentElement.removeChild(card.element);
                     }
