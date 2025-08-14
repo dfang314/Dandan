@@ -163,6 +163,7 @@
             }
             
             init() {
+                console.log("init starts");
                 this.setupEventListeners();
                 // Delay initialization to ensure DOM is ready
                 setTimeout(() => this.initializeGame(), 100);
@@ -210,16 +211,21 @@
             initializeGame() {
                 const playgroundWidth = this.playgroundArea.offsetWidth;
                 const playgroundHeight = this.playgroundArea.offsetHeight;
+
+                console.log("init decking");
                 
-                this.deck = this.initDeck();
+                this.initDeck();
+
+                console.log("shuffling");
                 this.shuffle();
                 
+                console.log("drawing");
                 for (let i = 0; i < 7; i++) {
-                    this.draw(True);
+                    this.draw(true);
                 }
 
                 for (let i = 0; i < 7; i++) {
-                    this.draw(False);
+                    this.draw(false);
                 }
             }
 
@@ -227,8 +233,6 @@
                 const rect = document.createElement('div');
                 rect.className = 'card';
                 rect.style.backgroundColor = color;
-                rect.style.left = x + 'px';
-                rect.style.top = y + 'px';
                 
                 this.playgroundArea.appendChild(rect);
                 
@@ -334,6 +338,8 @@
                 const deckCount = this.deck.length;
                 this.deckPlaceholder.textContent = deckCount === 0 ? 'EMPTY' : `DECK (${deckCount})`;
                 this.deckPlaceholder.style.opacity = deckCount === 0 ? '0.5' : '1';
+                console.log("Deck count: ");
+                console.log(deckCount);
 
                 this.topHand.forEach(card => {
 
