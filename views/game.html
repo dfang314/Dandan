@@ -163,7 +163,6 @@
             }
             
             init() {
-                console.log("init starts");
                 this.setupEventListeners();
                 // Delay initialization to ensure DOM is ready
                 setTimeout(() => this.initializeGame(), 100);
@@ -209,17 +208,10 @@
             }
 
             initializeGame() {
-                const playgroundWidth = this.playgroundArea.offsetWidth;
-                const playgroundHeight = this.playgroundArea.offsetHeight;
-
-                console.log("init decking");
-                
                 this.initDeck();
 
-                console.log("shuffling");
                 this.shuffle();
                 
-                console.log("drawing");
                 for (let i = 0; i < 7; i++) {
                     this.draw(true);
                 }
@@ -261,33 +253,11 @@
                 this.playgroundArea.appendChild(card.element);
                 
                 setTimeout(() => this.repositionAndUpdate(), 50);
-                // if (row === 0) {
-                //     // Add to top row and reposition all top row cards
-                //     const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
-                //     const y = 30;
-                //     card.element.style.left = x + 'px';
-                //     card.element.style.top = y + 'px';
-                    
-                // } else {
-                //     // Add to bottom row and reposition all bottom row cards
-                //     const x = (this.playgroundArea.offsetWidth / 2) - (this.CARD_WIDTH / 2);
-                //     const y = this.playgroundArea.offsetHeight - 100;
-                //     card.element.style.left = x + 'px';
-                //     card.element.style.top = y + 'px';                  
-                // }
             }
             
             trackMouse(e) {
                 this.mousePosition.x = e.clientX;
                 this.mousePosition.y = e.clientY;
-                
-                // TODO: Make card near mouse bigger or something
-                // this.topHand.forEach(card => {
-                //     this.updateCardRotation(card);
-                // });
-                // this.bottomHand.forEach(card => {
-                //     this.updateCardRotation(card);
-                // });
             }
             
             isCardNearCursor(card) {
@@ -302,44 +272,12 @@
                 
                 return distance < this.HOVER_DISTANCE;
             }
-
-            // calculateRotation(x, isTopRow = false) {
-            //     const screenWidth = window.innerWidth;
-            //     const relativePosition = Math.max(-1, Math.min(1, (x - screenWidth / 2) / (screenWidth / 2)));
-            //     const baseRotation = relativePosition * this.MAX_ROTATION;
-            //     return isTopRow ? -baseRotation : baseRotation;
-            // }
-            
-            // getCardRow(card) {
-            //     const rect = card.element.getBoundingClientRect();
-            //     const playgroundRect = this.playgroundArea.getBoundingClientRect();
-            //     const relativeY = rect.top - playgroundRect.top;
-            //     const playgroundHeight = this.playgroundArea.offsetHeight;
-            //     const rowHeight = playgroundHeight / 7;
-                
-            //     const rowIndex = Math.floor(relativeY / rowHeight);
-            //     return Math.max(0, Math.min(6, rowIndex)); // Clamp to 0-6 (rows 1-7)
-            // }
-            
-            // updateCardRotation(card) {
-            //     const row = this.getCardRow(card);
-            //     if (row === 0 || row === 6) {
-            //         const rect = card.element.getBoundingClientRect();
-            //         const centerX = rect.left + rect.width / 2;
-            //         const rotation = this.calculateRotation(centerX, isTopRow);
-            //         card.element.style.transform = `rotate(${rotation}deg)`;
-            //     } else {
-            //         card.element.style.transform = "rotate(0deg)";
-            //     }
-            // }
             
             repositionAndUpdate() {
 
                 const deckCount = this.deck.length;
                 this.deckPlaceholder.textContent = deckCount === 0 ? 'EMPTY' : `DECK (${deckCount})`;
                 this.deckPlaceholder.style.opacity = deckCount === 0 ? '0.5' : '1';
-                console.log("Deck count: ");
-                console.log(deckCount);
 
                 this.topHand.forEach(card => {
 
@@ -350,40 +288,6 @@
                 // TODO: position
 
             }
-            
-            // positionCardsInRow(cards, y) {
-            //     if (cards.length === 0) return;
-                
-            //     const playgroundWidth = this.playgroundArea.offsetWidth;
-            //     const spacing = cards.length > 1 ? Math.min(80, (playgroundWidth - 100) / (cards.length - 1)) : 0;
-            //     const totalWidth = (cards.length - 1) * spacing;
-            //     const startX = (playgroundWidth - totalWidth) / 2 - (this.CARD_WIDTH / 2);
-                
-            //     cards.forEach((rectangleObj, i) => {
-            //         const x = startX + i * spacing;
-            //         rectangleObj.element.style.left = x + 'px';
-            //         rectangleObj.element.style.top = y + 'px';
-                    
-            //         // Update original position and row
-            //         rectangleObj.originalPosition = { x: x, y: y };
-            //         rectangleObj.originalRow = this.getCardRow(rectangleObj);
-                    
-            //         this.updateCardRotation(rectangleObj);
-            //     });
-            // }
-            
-            // positionRowCards(indices, colors, playgroundWidth, y) {
-            //     const spacing = 80;
-            //     const totalWidth = (indices.length - 1) * spacing;
-            //     const startX = (playgroundWidth - totalWidth) / 2 - (this.CARD_WIDTH / 2);
-                
-            //     indices.forEach((colorIndex, i) => {
-            //         const x = startX + i * spacing;
-            //         const rectangle = this.createRectangle(colors[colorIndex], x, y);
-            //         this.rectangles.push(rectangle);
-            //         this.updateCardRotation(rectangle);
-            //     });
-            // }
             
             startDrag(e, card) {
 
@@ -437,37 +341,6 @@
                 } else {
                     attemptPlay(this.currentDragCard);
                 }
-                
-                // if (this.isOverBlocker(e.clientX, e.clientY)) {
-                //     this.currentDragCard.element.style.left = this.currentDragCard.originalPosition.x + 'px';
-                //     this.currentDragCard.element.style.top = this.currentDragCard.originalPosition.y + 'px';
-                // } else if (this.isOverDeck(e.clientX, e.clientY)) {
-                //     this.addToDeck(this.currentDragCard);
-                // } else {
-                //     // Change 2: Check if the move is valid
-                //     const currentRow = this.getCardRow(this.currentDragCard);
-                //     const isValidMove = this.isValidMove(this.currentDragCard, currentRow);
-                    
-                //     if (!isValidMove) {
-                //         // Return card to original position
-                //         this.currentDragCard.element.style.left = this.currentDragCard.originalPosition.x + 'px';
-                //         this.currentDragCard.element.style.top = this.currentDragCard.originalPosition.y + 'px';
-                //     } else {
-                //         // Ensure card stays in playground
-                //         if (this.currentDragCard.element.parentElement !== this.playgroundArea) {
-                //             this.playgroundArea.appendChild(this.currentDragCard.element);
-                //         }
-                        
-                //         // Change 3: If card was moved to/from top or bottom row, reposition cards
-                //         const newRow = this.getCardRow(this.currentDragCard);
-                //         if (this.currentDragCard.originalRow === 0 || this.currentDragCard.originalRow === 6 || 
-                //             newRow === 0 || newRow === 6) {
-                //             setTimeout(() => this.repositionRowCards(), 50);
-                //         }
-                //     }
-                    
-                //     this.updateCardRotation(this.currentDragCard);
-                // }
                 
                 this.currentDragCard = null;
             }
