@@ -117,7 +117,7 @@
             constructor() {
                 this.playgroundArea = document.getElementById('playgroundArea');
                 this.deckPlaceholder = document.getElementById('deckPlaceholder');
-                this.stack = document.getElementById('stack');
+                this.stackElement = document.getElementById('stack');
                 
                 this.deck = [];
                 this.stack = [];
@@ -137,6 +137,7 @@
                 this.MAX_ROTATION = 25;
                 this.HOVER_DISTANCE = 50; // Distance threshold for hover detection
                 this.HAND_HEIGHT = 200;
+                this.HAND_MARGIN = 20; // Distance from edge of screen
                 
                 this.init();
             }
@@ -223,6 +224,7 @@
                 if (this.deck.length === 0) return;
                 const card = this.deck.shift();
                 card.element.classList.remove('in-deck');
+                
                 if (top) {
                     card.pos = "topHand";
                     this.topHand.unshift(card);
@@ -230,7 +232,6 @@
                     card.pos = "bottomHand";
                     this.bottomHand.unshift(card);
                 }
-                this.playgroundArea.appendChild(card.element);
                 
                 setTimeout(() => this.repositionAndUpdate(), 50);
             }
@@ -254,23 +255,57 @@
             }
             
             repositionAndUpdate() {
+                const playgroundRect = this.playgroundArea.getBoundingClientRect();
+                const playgroundWidth = playgroundRect.width;
+                const playgroundHeight = playgroundRect.height;
 
                 const deckCount = this.deck.length;
                 this.deckPlaceholder.textContent = deckCount === 0 ? 'EMPTY' : `DECK (${deckCount})`;
                 this.deckPlaceholder.style.opacity = deckCount === 0 ? '0.5' : '1';
 
-                this.topHand.forEach(card => {
-
+                // Position top hand - at the top of screen, centered horizontally
+                this.topHand.forEach((card, index) => {
+                    if (!card.isDragging) {
+                        const totalCards = this.topHand.length;
+                        const totalWidth = totalCards * this.CARD_WIDTH + (totalCards - 1) * 10; // 10px spacing between cards
+                        const startX = (playgroundWidth - totalWidth) / 2;
+                        
+                        const x = startX + index * (this.CARD_WIDTH + 10);
+                        const y = this.HAND_MARGIN;
+                        
+                        card.element.style.left = x + 'px';
+                        card.element.style.top = y + 'px';
+                        card.element.style.transform = 'rotate(0deg)'; // Keep cards straight for now
+                    }
                 });
-                this.topField.forEach(card => {
 
+                // Position bottom hand - at the bottom of screen, centered horizontally
+                this.bottomHand.forEach((card, index) => {
+                    if (!card.isDragging) {
+                        const totalCards = this.bottomHand.length;
+                        const totalWidth = totalCards * this.CARD_WIDTH + (totalCards - 1) * 10; // 10px spacing between cards
+                        const startX = (playgroundWidth - totalWidth) / 2;
+                        
+                        const x = startX + index * (this.CARD_WIDTH + 10);
+                        const y = playgroundHeight - this.CARD_HEIGHT - this.HAND_MARGIN;
+                        
+                        card.element.style.left = x + 'px';
+                        card.element.style.top = y + 'px';
+                        card.element.style.transform = 'rotate(0deg)'; // Keep cards straight for now
+                    }
                 });
-                // TODO: position
 
+                // Position field cards (placeholder for now)
+                this.topField.forEach((card, index) => {
+                    // TODO: position field cards
+                });
+
+                this.bottomField.forEach((card, index) => {
+                    // TODO: position field cards
+                });
             }
             
             startDrag(e, card) {
-
                 if (card.pos !== "topHand" && card.pos !== "bottomHand") return;
                 
                 this.isDragging = true;
@@ -317,7 +352,7 @@
                 const playgroundRect = this.playgroundArea.getBoundingClientRect();
                 let y = e.clientY - playgroundRect.top - this.dragOffset.y;
                 if (y < playgroundRect.height - this.HAND_HEIGHT) {
-                    attemptPlay(this.currentDragCard);
+                    this.attemptPlay(this.currentDragCard);
                 }
                 
                 setTimeout(() => this.repositionAndUpdate(), 50);
@@ -326,7 +361,7 @@
             
             handleResize() {
                 // Throttle resize handling
-                // TODO: handle this
+                setTimeout(() => this.repositionAndUpdate(), 100);
             }
             
             // Cleanup method for potential memory leaks
