@@ -31,21 +31,6 @@
             flex-direction: column;
         }
         
-        .game-row {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        #row2,
-        #row5,
-        #row6 {
-            border-bottom: none;
-        }
-        
         .card {
             width: 70px;
             height: 140px;
@@ -85,14 +70,15 @@
         }
         
         .deck-placeholder {
+            position: absolute;
             width: 70px;
             height: 140px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             border: 2px dashed rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             background: rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 12px;
             color: rgba(0, 0, 0, 0.5);
             font-weight: bold;
@@ -106,7 +92,6 @@
             width: 100px;
             height: 200px;
             background: rgba(255, 0, 0, 0.15);
-            border-left: 2px solid red;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -121,15 +106,9 @@
     <h1 class="title">Working Title asdf</h1>
         
     <div class="playground-area" id="playgroundArea">
-        <div class="game-row" id="row1"></div>
-        <div class="game-row" id="row2"></div>
-        <div class="game-row" id="row3"></div>
-        <div class="game-row" id="row4">
-            <div class="deck-placeholder" id="deckPlaceholder">DECK</div>
-        </div>
-        <div class="game-row" id="row5"></div>
-        <div class="game-row" id="row6"></div>
-        <div class="game-row" id="row7"></div>
+       
+        <div class="deck-placeholder" id="deckPlaceholder">DECK</div>
+
         <div class="stack" id="stack">Stack</div>
     </div>
 
@@ -241,6 +220,7 @@
             }
 
             draw(top) {
+                if (this.deck.length === 0) return;
                 const card = this.deck.shift();
                 card.element.classList.remove('in-deck');
                 if (top) {
@@ -336,12 +316,11 @@
 
                 const playgroundRect = this.playgroundArea.getBoundingClientRect();
                 let y = e.clientY - playgroundRect.top - this.dragOffset.y;
-                if (y > playgroundRect.height - this.HAND_HEIGHT) {
-                    setTimeout(() => this.repositionAndUpdate(), 50);
-                } else {
+                if (y < playgroundRect.height - this.HAND_HEIGHT) {
                     attemptPlay(this.currentDragCard);
                 }
                 
+                setTimeout(() => this.repositionAndUpdate(), 50);
                 this.currentDragCard = null;
             }
             
