@@ -3214,3 +3214,438 @@ Make the following changes. For each change, think step by step. Explain each st
 Change 1: There is currently a bug that cards in the deck can be seen and dragged. Make these cards hidden by using the "in-deck" system.
 
 Change 2: Add code into the repositionAndUpdate() function so that the top hand is at the top of the screen and centered. Similarly, the bottom hand is moved to the bottom of the screen and centered.
+---
+I am creating a game with html, css, and javascript. It is a two player card game that involves a deck. The code is working. The code is given:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game Playground</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .playground-area {
+            width: 90vw;
+            height: 80vh;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            position: relative;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card {
+            width: 70px;
+            height: 140px;
+            border-radius: 8px;
+            position: absolute;
+            cursor: move;
+            z-index: 1000;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            transform-origin: center center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: scale(1.5);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 1);
+            transition: all 0.1s ease;
+        }
+        
+        .card.dragging {
+            transform: scale(1.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            border-color: rgba(255, 255, 255, 1);
+            transition: none;
+        }
+        
+        .card.in-deck {
+            cursor: default;
+            pointer-events: none;
+            opacity: 0;
+            display: none;
+        }
+        
+        .deck-placeholder {
+            position: absolute;
+            width: 70px;
+            height: 140px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px dashed rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+        }
+
+        .stack {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100px;
+            height: 200px;
+            background: rgba(255, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: red;
+            font-weight: bold;
+            pointer-events: none; /* Allow dragging over it */
+            z-index: 5000;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">Working Title asdf</h1>
+        
+    <div class="playground-area" id="playgroundArea">
+       
+        <div class="deck-placeholder" id="deckPlaceholder">DECK</div>
+
+        <div class="stack" id="stack">Stack</div>
+    </div>
+
+    <script>
+        class CardGamePlayground {
+            constructor() {
+                this.playgroundArea = document.getElementById('playgroundArea');
+                this.deckPlaceholder = document.getElementById('deckPlaceholder');
+                this.stackElement = document.getElementById('stack');
+                
+                this.deck = [];
+                this.stack = [];
+                this.topHand = [];
+                this.topField = [];
+                this.bottomHand = [];
+                this.bottomField = [];
+                this.isDragging = false;
+                this.currentDragCard = null;
+                this.dragOffset = { x: 0, y: 0 };
+                this.mousePosition = { x: 0, y: 0 };
+                
+                // Constants
+                this.TOTAL_CARDS = 60;
+                this.CARD_WIDTH = 70;
+                this.CARD_HEIGHT = 140;
+                this.MAX_ROTATION = 25;
+                this.HOVER_DISTANCE = 50; // Distance threshold for hover detection
+                this.HAND_HEIGHT = 200;
+                this.HAND_MARGIN = 20; // Distance from edge of screen
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                // Delay initialization to ensure DOM is ready
+                setTimeout(() => this.initializeGame(), 100);
+            }
+            
+            setupEventListeners() {
+                // Use bound methods to maintain context and enable cleanup
+                this.boundDrag = this.drag.bind(this);
+                this.boundStopDrag = this.stopDrag.bind(this);
+                this.boundHandleResize = this.handleResize.bind(this);
+                this.boundTrackMouse = this.trackMouse.bind(this);
+                
+                document.addEventListener('mousemove', this.boundDrag, { passive: false });
+                document.addEventListener('mousemove', this.boundTrackMouse, { passive: true });
+                document.addEventListener('mouseup', this.boundStopDrag);
+                window.addEventListener('resize', this.boundHandleResize);
+            }
+            
+            initDeck() {
+                const colors = [];
+                for (let i = 0; i < this.TOTAL_CARDS; i++) {
+                    const hue = (i * 360) / this.TOTAL_CARDS;
+                    const saturation = 70 + (i % 3) * 10;
+                    const lightness = 50 + (i % 4) * 10;
+                    colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+                }
+
+                colors.forEach((color) => {
+                    const card = this.createCard(color);
+                    this.deck.unshift(card);
+                    card.element.classList.add('in-deck');
+                    card.pos = "deck";
+                });
+            }
+
+            shuffle() {
+                const indices = Array.from({length: this.deck.length}, (_, i) => i);
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+                // TODO: actually apply the shuffle
+            }
+
+            initializeGame() {
+                this.initDeck();
+
+                this.shuffle();
+                
+                for (let i = 0; i < 7; i++) {
+                    this.draw(true);
+                }
+
+                for (let i = 0; i < 7; i++) {
+                    this.draw(false);
+                }
+            }
+
+            createCard(color) {
+                const rect = document.createElement('div');
+                rect.className = 'card';
+                rect.style.backgroundColor = color;
+                
+                this.playgroundArea.appendChild(rect);
+                
+                const card = {
+                    element: rect,
+                    isDragging: false,
+                    color: color,
+                    pos: "deck", // deck, stack, topHand, topField, bottomHand, bottomField
+                };
+                
+                rect.addEventListener('mousedown', (e) => this.startDrag(e, card));
+                
+                return card;
+            }
+
+            draw(top) {
+                if (this.deck.length === 0) return;
+                const card = this.deck.shift();
+                card.element.classList.remove('in-deck');
+                
+                if (top) {
+                    card.pos = "topHand";
+                    this.topHand.unshift(card);
+                } else {
+                    card.pos = "bottomHand";
+                    this.bottomHand.unshift(card);
+                }
+                
+                setTimeout(() => this.repositionAndUpdate(), 50);
+            }
+            
+            trackMouse(e) {
+                this.mousePosition.x = e.clientX;
+                this.mousePosition.y = e.clientY;
+            }
+            
+            isCardNearCursor(card) {
+                const rect = card.element.getBoundingClientRect();
+                const cardCenterX = rect.left + rect.width / 2;
+                const cardCenterY = rect.top + rect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(this.mousePosition.x - cardCenterX, 2) + 
+                    Math.pow(this.mousePosition.y - cardCenterY, 2)
+                );
+                
+                return distance < this.HOVER_DISTANCE;
+            }
+            
+            repositionAndUpdate() {
+                const playgroundRect = this.playgroundArea.getBoundingClientRect();
+                const playgroundWidth = playgroundRect.width;
+                const playgroundHeight = playgroundRect.height;
+
+                const deckCount = this.deck.length;
+                this.deckPlaceholder.textContent = deckCount === 0 ? 'EMPTY' : `DECK (${deckCount})`;
+                this.deckPlaceholder.style.opacity = deckCount === 0 ? '0.5' : '1';
+
+                // Position top hand - at the top of screen, centered horizontally
+                this.topHand.forEach((card, index) => {
+                    if (!card.isDragging) {
+                        const totalCards = this.topHand.length;
+                        const totalWidth = totalCards * this.CARD_WIDTH + (totalCards - 1) * 10; // 10px spacing between cards
+                        const startX = (playgroundWidth - totalWidth) / 2;
+                        
+                        const x = startX + index * (this.CARD_WIDTH + 10);
+                        const y = this.HAND_MARGIN;
+                        
+                        card.element.style.left = x + 'px';
+                        card.element.style.top = y + 'px';
+                        card.element.style.transform = 'rotate(0deg)'; // Keep cards straight for now
+                    }
+                });
+
+                // Position bottom hand - at the bottom of screen, centered horizontally
+                this.bottomHand.forEach((card, index) => {
+                    if (!card.isDragging) {
+                        const totalCards = this.bottomHand.length;
+                        const totalWidth = totalCards * this.CARD_WIDTH + (totalCards - 1) * 10; // 10px spacing between cards
+                        const startX = (playgroundWidth - totalWidth) / 2;
+                        
+                        const x = startX + index * (this.CARD_WIDTH + 10);
+                        const y = playgroundHeight - this.CARD_HEIGHT - this.HAND_MARGIN;
+                        
+                        card.element.style.left = x + 'px';
+                        card.element.style.top = y + 'px';
+                        card.element.style.transform = 'rotate(0deg)'; // Keep cards straight for now
+                    }
+                });
+
+                // Position field cards (placeholder for now)
+                this.topField.forEach((card, index) => {
+                    // TODO: position field cards
+                });
+
+                this.bottomField.forEach((card, index) => {
+                    // TODO: position field cards
+                });
+            }
+            
+            startDrag(e, card) {
+                if (card.pos !== "topHand" && card.pos !== "bottomHand") return;
+                
+                this.isDragging = true;
+                this.currentDragCard = card;
+                card.isDragging = true;
+                card.element.classList.add('dragging');
+                
+                const rect = card.element.getBoundingClientRect();
+                const playgroundRect = this.playgroundArea.getBoundingClientRect();
+                
+                this.dragOffset.x = e.clientX - rect.left;
+                this.dragOffset.y = e.clientY - rect.top;
+                
+                e.preventDefault();
+            }
+            
+            drag(e) {
+                if (!this.isDragging || !this.currentDragCard) return;
+                
+                const playgroundRect = this.playgroundArea.getBoundingClientRect();
+                
+                let x = e.clientX - playgroundRect.left - this.dragOffset.x;
+                let y = e.clientY - playgroundRect.top - this.dragOffset.y;
+                
+                // Clamp to playground bounds
+                x = Math.max(0, Math.min(playgroundRect.width - this.CARD_WIDTH, x));
+                y = Math.max(0, Math.min(playgroundRect.height - this.CARD_HEIGHT, y));
+                
+                this.currentDragCard.element.style.left = x + 'px';
+                this.currentDragCard.element.style.top = y + 'px';
+            }
+            
+            attemptPlay(card) {
+                // TODO: play the card
+            }
+            
+            stopDrag(e) {
+                if (!this.isDragging || !this.currentDragCard) return;
+                
+                this.isDragging = false;
+                this.currentDragCard.isDragging = false;
+                this.currentDragCard.element.classList.remove('dragging');
+
+                const playgroundRect = this.playgroundArea.getBoundingClientRect();
+                let y = e.clientY - playgroundRect.top - this.dragOffset.y;
+                if (y < playgroundRect.height - this.HAND_HEIGHT) {
+                    this.attemptPlay(this.currentDragCard);
+                }
+                
+                setTimeout(() => this.repositionAndUpdate(), 50);
+                this.currentDragCard = null;
+            }
+            
+            handleResize() {
+                // Throttle resize handling
+                setTimeout(() => this.repositionAndUpdate(), 100);
+            }
+            
+            // Cleanup method for potential memory leaks
+            destroy() {
+                document.removeEventListener('mousemove', this.boundDrag);
+                document.removeEventListener('mousemove', this.boundTrackMouse);
+                document.removeEventListener('mouseup', this.boundStopDrag);
+                window.removeEventListener('resize', this.boundHandleResize);
+                
+                if (this.resizeTimeout) {
+                    clearTimeout(this.resizeTimeout);
+                }
+                
+                // Clean up card elements
+                this.topHand.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+                
+                this.topField.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+
+                this.deck.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+
+                this.stack.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+
+                this.bottomField.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+
+                this.bottomHand.forEach(card => {
+                    if (card.element.parentElement) {
+                        card.element.parentElement.removeChild(card.element);
+                    }
+                });
+            }
+        }
+        
+        // Initialize the game
+        let gameInstance;
+        window.addEventListener('load', () => {
+            gameInstance = new CardGamePlayground();
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (gameInstance) {
+                gameInstance.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
+
+Implement the shuffle function. There is starting code in the shuffle function already, however, feel free to delete it. Explain your reasoning. Let's think step by step.

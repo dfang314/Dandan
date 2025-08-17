@@ -179,12 +179,10 @@
             }
 
             shuffle() {
-                const indices = Array.from({length: this.deck.length}, (_, i) => i);
-                for (let i = indices.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                for (let i = this.deck.length - 1; i > 0; i--) {
+                    const randomIndex = Math.floor(Math.random() * (i + 1));
+                    [this.deck[i], this.deck[randomIndex]] = [this.deck[randomIndex], this.deck[i]];
                 }
-                // TODO: actually apply the shuffle
             }
 
             initializeGame() {
