@@ -3649,3 +3649,7 @@ I am creating a game with html, css, and javascript. It is a two player card gam
 </html>
 
 Implement the shuffle function. There is starting code in the shuffle function already, however, feel free to delete it. Explain your reasoning. Let's think step by step.
+---
+I have a simple working website. It currently uses express js and express-session. The website also has a subpage, "/restricted", that has a lot of html, css, and javascript implementing a card game. Now, I want to make the card game 2-player. I want to use socket.io to accomplish this.
+
+Describe step by step how to use socket.io to make the existing game two player. Explain each step. Enumerate the steps. Provide short examples of the type of code changes required. Let's think step by step.
