@@ -13,6 +13,12 @@ app.use(session({
   }),
 }))
 
+const http = require('http');
+const server = http.createServer(app);
+
+const socketIo = require('socket.io');
+const io = socketIo(server);
+
 var path = require('path')
 
 app.set('views', path.join(__dirname, 'views'));
@@ -85,7 +91,7 @@ app.get('/logout', function(req, res){
 });
 
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
 
