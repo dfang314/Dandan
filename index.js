@@ -90,6 +90,29 @@ app.get('/logout', function(req, res){
   });
 });
 
+const gameRooms = new Map();
+
+io.on('connection', (socket) => {
+    console.log('Player connected:', socket.id);
+    
+    socket.on('join-game', () => {
+        // Find an available room or create a new one
+        let roomId = findAvailableRoom();
+        if (!roomId) {
+            roomId = createNewRoom();
+        }
+        
+        socket.join(roomId);
+        gameRooms.get(roomId).players.push(socket.id);
+        
+        // If room is full, start the game
+        if (gameRooms.get(roomId).players.length === 2) {
+            io.to(roomId).emit('game-start', {
+                players: gameRooms.get(roomId).players
+            });
+        }
+    });
+});
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
