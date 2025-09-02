@@ -112,26 +112,46 @@
         <div class="stack" id="stack">Stack</div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      let playerNumber = null;
+      let gameState = null;
+
+      // Join game when page loads
+      socket.emit('join-game');
+
+      socket.on('player-assigned', (data) => {
+        playerNumber = data.playerNumber;
+        document.getElementById('player-info').textContent = `You are Player ${playerNumber}`;
+      });
+
+      socket.on('game-start', (data) => {
+        gameState = data.gameState;
+        initializeGameUI();
+        updateGameDisplay();
+      });
+
+      socket.on('game-update', (data) => {
+        gameState = data.gameState;
+        updateGameDisplay();
+        handleOpponentMove(data.lastMove);
+      });
+    </script>
+
     <script>
         class CardGamePlayground {
             constructor() {
                 this.playgroundArea = document.getElementById('playgroundArea');
                 this.deckPlaceholder = document.getElementById('deckPlaceholder');
                 this.stackElement = document.getElementById('stack');
-                
-                this.deck = [];
-                this.stack = [];
-                this.topHand = [];
-                this.topField = [];
-                this.bottomHand = [];
-                this.bottomField = [];
+
                 this.isDragging = false;
                 this.currentDragCard = null;
                 this.dragOffset = { x: 0, y: 0 };
                 this.mousePosition = { x: 0, y: 0 };
                 
                 // Constants
-                this.TOTAL_CARDS = 60;
                 this.CARD_WIDTH = 70;
                 this.CARD_HEIGHT = 140;
                 this.MAX_ROTATION = 25;
@@ -160,43 +180,9 @@
                 document.addEventListener('mouseup', this.boundStopDrag);
                 window.addEventListener('resize', this.boundHandleResize);
             }
-            
-            initDeck() {
-                const colors = [];
-                for (let i = 0; i < this.TOTAL_CARDS; i++) {
-                    const hue = (i * 360) / this.TOTAL_CARDS;
-                    const saturation = 70 + (i % 3) * 10;
-                    const lightness = 50 + (i % 4) * 10;
-                    colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-                }
-
-                colors.forEach((color) => {
-                    const card = this.createCard(color);
-                    this.deck.unshift(card);
-                    card.element.classList.add('in-deck');
-                    card.pos = "deck";
-                });
-            }
-
-            shuffle() {
-                for (let i = this.deck.length - 1; i > 0; i--) {
-                    const randomIndex = Math.floor(Math.random() * (i + 1));
-                    [this.deck[i], this.deck[randomIndex]] = [this.deck[randomIndex], this.deck[i]];
-                }
-            }
 
             initializeGame() {
-                this.initDeck();
-
-                this.shuffle();
-                
-                for (let i = 0; i < 7; i++) {
-                    this.draw(true);
-                }
-
-                for (let i = 0; i < 7; i++) {
-                    this.draw(false);
-                }
+                // TODO: receive game state using socket and display
             }
 
             createCard(color) {
@@ -338,6 +324,7 @@
             
             attemptPlay(card) {
                 // TODO: play the card
+                
             }
             
             stopDrag(e) {

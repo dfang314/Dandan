@@ -90,38 +90,167 @@ app.get('/logout', function(req, res){
   });
 });
 
+// game code starts here
+
+class Game {
+    constructor() {
+        this.players = 0;
+        this.deck = [];
+        this.stack = [];
+        this.topHand = [];
+        this.topField = [];
+        this.bottomHand = [];
+        this.bottomField = [];
+        
+        // Constants
+        this.TOTAL_CARDS = 60;
+    }
+    
+    initDeck() {
+        const colors = [];
+        for (let i = 0; i < this.TOTAL_CARDS; i++) {
+            const hue = (i * 360) / this.TOTAL_CARDS;
+            const saturation = 70 + (i % 3) * 10;
+            const lightness = 50 + (i % 4) * 10;
+            colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+        }
+
+        colors.forEach((color) => {
+            const card = this.createCard(color);
+            this.deck.unshift(card);
+            card.pos = "deck";
+        });
+    }
+
+    shuffle() {
+        for (let i = this.deck.length - 1; i > 0; i--) {
+            const randomIndex = Math.floor(Math.random() * (i + 1));
+            [this.deck[i], this.deck[randomIndex]] = [this.deck[randomIndex], this.deck[i]];
+        }
+    }
+
+    initializeGame() {
+        this.initDeck();
+
+        this.shuffle();
+        
+        for (let i = 0; i < 7; i++) {
+            this.draw(true);
+        }
+
+        for (let i = 0; i < 7; i++) {
+            this.draw(false);
+        }
+    }
+
+    createCard(color) {
+        const card = {
+            name: color.toString(),
+            pos: "deck", // deck, stack, topHand, topField, bottomHand, bottomField
+        };
+        
+        return card;
+    }
+
+    draw(top) {
+        if (this.deck.length === 0) return;
+        const card = this.deck.shift();
+        
+        if (top) {
+            card.pos = "topHand";
+            this.topHand.unshift(card);
+        } else {
+            card.pos = "bottomHand";
+            this.bottomHand.unshift(card);
+        }
+        
+        setTimeout(() => this.repositionAndUpdate(), 50);
+    }
+
+    canPlay(cardName, playerNumber) {
+        // TODO: validate if card can be played
+
+    }
+    
+    play(cardName, playerNumber) {
+        // TODO: play the card
+        
+    }
+
+}
+
 const gameRooms = new Map();
 
+function findAvailableRoom() {
+  for (let [roomId, game] of gameRooms) {
+    if (game.players < 2) {
+      return roomId;
+    }
+  }
+  return null;
+}
+
+function createNewRoom() {
+  const roomId = Math.random().toString(36).substring(2, 15);
+  gameRooms.set(roomId, Game());
+  return roomId;
+}
+
+function handlePlayerDisconnect() {
+    // TODO
+}
+
 io.on('connection', (socket) => {
-    console.log('Player connected:', socket.id);
+  console.log('Player connected:', socket.id);
+  
+  socket.on('join-game', () => {
+    let roomId = findAvailableRoom();
+    if (!roomId) {
+      roomId = createNewRoom();
+    }
     
-    socket.on('join-game', () => {
-        // Find an available room or create a new one
-        let roomId = findAvailableRoom();
-        if (!roomId) {
-            roomId = createNewRoom();
-        }
-        
-        socket.join(roomId);
-        gameRooms.get(roomId).players.push(socket.id);
-        
-        // If room is full, start the game
-        if (gameRooms.get(roomId).players.length === 2) {
-            io.to(roomId).emit('game-start', {
-                players: gameRooms.get(roomId).players
-            });
-        }
-    });
+    socket.join(roomId);
+    socket.roomId = roomId; // Store room ID on socket
+    
+    const game = gameRooms.get(roomId);
+    game.players++;
+    
+    // Assign player number
+    const playerNumber = room.players.length;
+    socket.playerNumber = playerNumber;
+    
+    socket.emit('player-assigned', { playerNumber, roomId });
+    
+    if (game.players === 2) {
+      // Deal initial cards and start game
+      game.initializeGame();
+      io.to(roomId).emit('game-start', {
+        gameState: room.gameState
+      });
+    }
+  });
+
+  // Handle game moves
+  socket.on('play-card', (cardName) => {
+    const roomId = socket.roomId;
+    const game = gameRooms.get(roomId);
+    
+    if (game.canPlay(cardName, socket.playerNumber)) {
+      game.play(cardName, socket.playerNumber);
+      io.to(roomId).emit('valid-move');
+    } else {
+      io.to(roomId).emit('invalid-move');
+    }
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    if (socket.roomId) {
+      handlePlayerDisconnect(socket.roomId, socket.id);
+    }
+  });
 });
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
-
-// app.get('/mtg', (req, res) => {
-//   res.send('Here are simple rules for mtg')
-// })
-
-// app.get('/dandan', (req, res) => {
-//   res.send('Here are the rules for dandan')
-// })

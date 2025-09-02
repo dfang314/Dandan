@@ -3653,3 +3653,132 @@ Implement the shuffle function. There is starting code in the shuffle function a
 I have a simple working website. It currently uses express js and express-session. The website also has a subpage, "/restricted", that has a lot of html, css, and javascript implementing a card game. Now, I want to make the card game 2-player. I want to use socket.io to accomplish this.
 
 Describe step by step how to use socket.io to make the existing game two player. Explain each step. Enumerate the steps. Provide short examples of the type of code changes required. Let's think step by step.
+
+Refer to the current index.js code here:
+const express = require('express')
+const app = express()
+const port = 3000
+
+var session = require('express-session')
+const MemoryStore = require('memorystore')(session)
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true,
+  store: new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+  }),
+}))
+
+const http = require('http');
+const server = http.createServer(app);
+
+const socketIo = require('socket.io');
+const io = socketIo(server);
+
+var path = require('path')
+
+app.set('views', path.join(__dirname, 'views'));
+
+app.use(express.static('public'))
+
+function authenticate(name, pass, fn) {
+  console.log('authenticating %s:%s', name, pass);
+  // var user = users[name];
+  // query the db for the given username
+  // if (!user) return fn(null, null)
+  // apply the same algorithm to the POSTed password, applying
+  // the hash against the pass / salt, if there is a match we
+  // found the user
+  // hash({ password: pass, salt: user.salt }, function (err, pass, salt, hash) {
+  //   if (err) return fn(err);
+  //   if (hash === user.hash) return fn(null, user)
+  //   fn(null, null)
+  // });
+  if (name === "testname" && pass === "testpass") return fn(null, name);
+  // TODO: add login failed message
+  return fn(null, null);
+}
+
+function restrict(req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
+}
+
+app.get('/', function(req, res){
+  res.redirect('/login');
+});
+
+app.get('/restricted', restrict, function(req, res){
+  res.sendFile(path.join(__dirname, 'views', 'game.html'));
+});
+
+app.get('/login', function(req, res){
+  res.sendFile(path.join(__dirname, 'views', 'login.html'));
+});
+
+app.post('/login', express.urlencoded({ extended: false }), function (req, res, next) {
+  if (!req.body) return res.sendStatus(400);
+  authenticate(req.body.username, req.body.password, function(err, user){
+    if (user) {
+      // Regenerate session when signing in
+      // to prevent fixation
+      req.session.regenerate(function(){
+        // Store the user's primary key
+        // in the session store to be retrieved,
+        // or in this case the entire user object
+        req.session.user = user;
+        res.redirect('/restricted');
+      });
+    } else {
+      res.redirect('/login');
+    }
+  });
+});
+
+app.get('/logout', function(req, res){
+  // destroy the user's session to log them out
+  // will be re-created next request
+  req.session.destroy(function(){
+    res.redirect('/');
+  });
+});
+
+const gameRooms = new Map();
+
+io.on('connection', (socket) => {
+    console.log('Player connected:', socket.id);
+    
+    socket.on('join-game', () => {
+        // Find an available room or create a new one
+        let roomId = findAvailableRoom();
+        if (!roomId) {
+            roomId = createNewRoom();
+        }
+        
+        socket.join(roomId);
+        gameRooms.get(roomId).players.push(socket.id);
+        
+        // If room is full, start the game
+        if (gameRooms.get(roomId).players.length === 2) {
+            io.to(roomId).emit('game-start', {
+                players: gameRooms.get(roomId).players
+            });
+        }
+    });
+});
+
+server.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
+
+// app.get('/mtg', (req, res) => {
+//   res.send('Here are simple rules for mtg')
+// })
+
+// app.get('/dandan', (req, res) => {
+//   res.send('Here are the rules for dandan')
+// })
