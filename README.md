@@ -5,7 +5,11 @@ Dandan is a variation of Magic: The Gathering. See more about Dandan in public/d
 These modules are required to run this code.
 
 npm install express
+
 npm install express-session
+
 npm install express-session memorystore
+
 npm install ejs
+
 npm install socket.io
