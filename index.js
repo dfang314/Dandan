@@ -245,9 +245,7 @@ io.on('connection', (socket) => {
 
   // Handle disconnection
   socket.on('disconnect', () => {
-    if (socket.roomId) {
-      handlePlayerDisconnect(socket.roomId, socket.id);
-    }
+    handlePlayerDisconnect(socket.roomId, socket.id);
   });
 });
 
