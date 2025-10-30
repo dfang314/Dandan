@@ -103,6 +103,7 @@ class Game {
         this.bottomField = [];
         this.phase = "none"; // upkeep, main1, declareBlocks, damage, main2, end
         this.passes = 0; // when passes = 0 go to next phase
+        this.turn = 0; // which player's turn it is
         this.priority = 0; // player with priority
         
         // Constants
