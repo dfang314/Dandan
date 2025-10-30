@@ -101,6 +101,9 @@ class Game {
         this.topField = [];
         this.bottomHand = [];
         this.bottomField = [];
+        this.phase = "none"; // upkeep, main1, declareBlocks, damage, main2, end
+        this.passes = 0; // when passes = 0 go to next phase
+        this.priority = 0; // player with priority
         
         // Constants
         this.TOTAL_CARDS = 60;
