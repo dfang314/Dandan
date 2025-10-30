@@ -147,6 +147,8 @@ class Game {
         const card = {
             name: color.toString(),
             pos: "deck", // deck, stack, topHand, topField, bottomHand, bottomField
+            type: null,
+            cost: 0,
         };
         
         return card;
