@@ -92,7 +92,7 @@ app.get('/logout', function(req, res){
 
 // game code starts here
 class Card {
-    constructor(name, type, cost, onResolve) {
+    constructor(name, type, cost, onResolve, pow = -1, tou = -1) {
         this.name = name;
         this.pos = "deck"; // deck, stack, topHand, topField, bottomHand, bottomField
         this.type = type; // creature, instant, sorcery, land
@@ -100,6 +100,8 @@ class Card {
         this.onResolve = onResolve;
         this.tapped = false;
         this.summoningSick = true;
+        this.pow = pow;
+        this.tou = tou;
     }
 }
 
