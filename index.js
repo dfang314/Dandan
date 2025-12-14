@@ -91,20 +91,32 @@ app.get('/logout', function(req, res){
 });
 
 // game code starts here
+class Card {
+    constructor(name, type, cost, onResolve) {
+        this.name = name;
+        this.pos = "deck"; // deck, stack, topHand, topField, bottomHand, bottomField
+        this.type = type; // creature, instant, sorcery, land
+        this.cost = cost; // only monocolor for now
+        this.onResolve = onResolve;
+        this.tapped = false;
+        this.summoningSick = true;
+    }
+}
 
 class Game {
     constructor() {
         this.players = 0;
         this.deck = [];
         this.stack = [];
-        this.topHand = [];
-        this.topField = [];
-        this.bottomHand = [];
-        this.bottomField = [];
+        this.hand1 = [];
+        this.field1 = [];
+        this.hand2 = [];
+        this.field2 = [];
         this.phase = "none"; // upkeep, main1, declareBlocks, damage, main2, end
-        this.passes = 0; // when passes = 0 go to next phase
-        this.turn = 0; // which player's turn it is
-        this.priority = 0; // player with priority
+        this.passes = 0; // when passes = 2 go to next phase
+        this.turn = 1; // which player's turn it is
+        this.priority = 1; // player with priority (1 or 2)
+        this.landPlayed = false;
         
         // Constants
         this.TOTAL_CARDS = 60;
@@ -120,9 +132,8 @@ class Game {
         }
 
         colors.forEach((color) => {
-            const card = this.createCard(color);
+            const card = Card(color, "land", 0, function(this){});
             this.deck.unshift(card);
-            card.pos = "deck";
         });
     }
 
@@ -147,40 +158,108 @@ class Game {
         }
     }
 
-    createCard(color) {
-        const card = {
-            name: color.toString(),
-            pos: "deck", // deck, stack, topHand, topField, bottomHand, bottomField
-            type: null,
-            cost: 0,
-        };
-        
-        return card;
-    }
-
-    draw(top) {
+    draw(playerNumber) {
         if (this.deck.length === 0) return;
         const card = this.deck.shift();
+
+        // TODO: game loss on empty deck
         
-        if (top) {
-            card.pos = "topHand";
-            this.topHand.unshift(card);
+        if (playerNumber === 1) {
+            card.pos = "hand1";
+            this.hand1.unshift(card);
         } else {
-            card.pos = "bottomHand";
-            this.bottomHand.unshift(card);
+            card.pos = "hand2";
+            this.hand2.unshift(card);
         }
         
         setTimeout(() => this.repositionAndUpdate(), 50);
     }
+    getHandField(playerNumber) {
+      let hand = null;
+      let field = null;
+      if(playerNumber === 1) {
+        hand = this.hand1;
+        field = this.field1;
+      } else {
+        hand = this.hand2;
+        field = this.field2;
+      }
+
+      return hand, field;
+    }
+
+    getCard(cardName, hand) {
+      for(let i = 0; i < hand.length; i++) {
+          if(hand[i].name === cardName) {
+            return hand[i];
+          }
+      }
+      return null;
+    }
 
     canPlay(cardName, playerNumber) {
         // TODO: validate if card can be played
+        let hand, field = this.getHandField(playerNumber);
+        let card = this.getCard(cardName, hand);
 
+        // check if card is in player's hand
+        if(card === null) {
+          return false;
+        }
+
+        // check priority
+        if(playerNumber != this.priority) {
+          return false;
+        }
+        if(card.type != "instant") {
+          if(this.phase != "main1" || this.phase != "main2" || this.stack.length > 0 || this.turn != playerNumber) {
+            return false;
+          }
+        }
+
+        // check if player has enough mana
+        let manaAvailable = 0;
+
+        for(let i = 0; i < field.length; i++) {
+          if(field[i].type == "land" && !field[i].tapped) {
+            manaAvailable++;
+          }
+        }
+
+        if(manaAvailable < card.cost) {
+          return false;
+        }
+
+        // land already played
+        if(card.type === "land" && this.landPlayed) {
+          return false;
+        }
+
+        // TODO: valid targets
+
+        return true;
     }
     
     play(cardName, playerNumber) {
         // TODO: play the card
+        if(!this.canPlay(cardName, playerNumber)) {
+          return;
+        }
+
+        let hand, field = this.getHandField(playerNumber);
+        let card = this.getCard(cardName, hand);
         
+        if(card.type === "land") {
+          // tODO: remove card from hand
+          field.unshift(card);
+        }
+
+        
+
+    }
+
+    pass(playerNumber) {
+      // TODO
     }
 
 }
